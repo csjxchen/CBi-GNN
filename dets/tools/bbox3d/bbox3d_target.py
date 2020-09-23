@@ -1,6 +1,6 @@
-from mmdet.core.bbox3d.target_ops import create_target_np
-from mmdet.core.bbox3d import region_similarity as regionSimilarity
-from mmdet.core.bbox3d import box_coders as boxCoders
+from dets.tools.bbox3d.target_ops import create_target_np
+from dets.tools.bbox3d import region_similarity as regionSimilarity
+from dets.tools.bbox3d import box_coders as boxCoders
 
 class TargetEncoder:
     def __init__(self,

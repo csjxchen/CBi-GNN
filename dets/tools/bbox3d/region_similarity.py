@@ -19,8 +19,8 @@ Region Similarity Calculators compare a pairwise measure of similarity
 between the boxes in two BoxLists.
 """
 
-from mmdet.core.bbox3d.geometry import rbbox2d_to_near_bbox, iou_jit, distance_similarity
-from mmdet.core.post_processing.rotate_nms_gpu import rotate_iou_gpu, rotate_iou_gpu_eval
+from dets.tools.bbox3d.geometry import rbbox2d_to_near_bbox, iou_jit, distance_similarity
+from dets.tools.post_processing.rotate_nms_gpu import rotate_iou_gpu, rotate_iou_gpu_eval
 import numba
 
 @numba.jit(nopython=True, parallel=True)

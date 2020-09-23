@@ -1,8 +1,10 @@
 import mmcv
 import numpy as np
 import torch
-from mmdet.datasets.kitti_utils import project_rect_to_image, project_velo_to_rect
-from mmdet.core.bbox3d.geometry import center_to_corner_box3d, limit_period
+from dets.datasets.kitti_utils import project_rect_to_image, project_velo_to_rect
+from dets.tools.bbox3d.geometry import center_to_corner_box3d, limit_period
+
+
 
 def rbbox3d2delta(anchors, boxes, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     xa, ya, za, wa, la, ha, ra = torch.split(anchors, 1, dim=-1)
@@ -67,7 +69,6 @@ def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     deltas = deltas.sub_(means).div_(stds)
 
     return deltas
-
 
 def delta2bbox(rois,
                deltas,

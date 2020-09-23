@@ -1,5 +1,5 @@
 import torch
-from dets.extra.iou3d.iou3d_utils import nms_gpu
+from dets.tools.extras.iou3d.iou3d_utils import nms_gpu
 
 def rotate_nms_torch(rbboxes,
                      scores,

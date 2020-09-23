@@ -15,7 +15,7 @@ from .coco_utils import results2json, fast_eval_recall
 from dets import datasets
 from .class_names import get_classes
 import tools.kitti_common as kitti
-from dets.utils.evaluation.kitti_eval import get_official_eval_result
+from dets.tools.evaluation.kitti_eval import get_official_eval_result
 from dets.datasets import utils, loader
 from .mean_ap import eval_map
 

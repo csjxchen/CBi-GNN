@@ -4,15 +4,13 @@ import time
 import numba
 import numpy as np
 
-from mmdet.core.post_processing.rotate_nms_gpu import rotate_iou_gpu_eval
-
+from dets.tools.post_processing.rotate_nms_gpu import rotate_iou_gpu_eval
 
 def get_mAP(prec):
     sums = 0
     for i in range(0, len(prec), 4):
         sums += prec[i]
     return sums / 11 * 100
-
 
 @numba.jit
 def get_thresholds(scores: np.ndarray, num_gt, num_sample_pts=41):
@@ -34,7 +32,6 @@ def get_thresholds(scores: np.ndarray, num_gt, num_sample_pts=41):
         current_recall += 1 / (num_sample_pts - 1.0)
     # print(len(thresholds), len(scores), num_gt)
     return thresholds
-
 
 def clean_data(gt_anno, dt_anno, current_class, difficulty):
     CLASS_NAMES = ['car', 'pedestrian', 'cyclist', 'van', 'person_sitting', 'car', 'tractor', 'trailer']

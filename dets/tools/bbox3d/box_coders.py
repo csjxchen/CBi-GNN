@@ -2,7 +2,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 import numpy as np
 import torch
-from mmdet.core.bbox3d.geometry import center_to_corner_box3d
+from dets.tools.bbox3d.geometry import center_to_corner_box3d
 
 def second_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
     """box encode for VoxelNet in lidar

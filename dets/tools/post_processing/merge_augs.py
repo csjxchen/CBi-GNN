@@ -1,7 +1,7 @@
 import torch
 
 import numpy as np
-from dets.utils.bbox.transforms import bbox_mapping_back
+from dets.tools.bbox.transforms import bbox_mapping_back
 
 def merge_aug_proposals(aug_proposals, img_metas, rpn_test_cfg):
     """Merge augmented proposals (multiscale, flip, etc.)
