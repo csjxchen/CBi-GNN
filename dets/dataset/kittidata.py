@@ -58,7 +58,7 @@ class KittiLiDAR(Dataset):
         with open(ann_file, 'r') as f:
             self.sample_ids = list(map(int, f.read().splitlines()))
         self.img_manager = ImageManager(root, img_norm_cfg=img_norm_cfg, size_divisor=size_divisor)
-
+        self.auxiliary_tools(augmentor, generator, target_encoder, out_size_factor, anchor_area_threshold)
     def auxiliary_tools(self, augmentor, generator, target_encoder, out_size_factor, anchor_area_threshold):
         self.augmentor = obj_from_dict(augmentor, point_augmentor)
         self.generator = obj_from_dict(generator, VoxelGenerator)
