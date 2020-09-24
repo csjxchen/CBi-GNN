@@ -310,7 +310,7 @@ class ImageManager(object):
         self.transformer = ImageTransform(
             size_divisor=size_divisor, **img_norm_cfg)
     
-    def __call__(self, sample_id, scale, flip=False)
+    def __call__(self, sample_id, scale, flip=False):
         img = mmcv.imread(osp.join(self.path, '%06d.png' % sample_id))
-        img, img_shape, pad_shape, scale_factor = self.transformer(img, scale=1, False)
+        img, img_shape, pad_shape, scale_factor = self.transformer(img, scale=1, flip=False)
         return img, img_shape, pad_shape, scale_factor
