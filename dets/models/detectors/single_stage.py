@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch
 
 from mmdet.ops.iou3d import iou3d_utils
+from mmdet.core import kitti_bbox2results
 
 from .. import builder
 
@@ -45,7 +46,8 @@ class SingleStageDetector(nn.Module):
         self.init_weights(pretrained)
 
     def forward(self, img, img_meta, return_loss=True, **kwargs):
-        if return_loss:
+        assert return_loss == self.training
+        if self.training:
             return self.forward_train(img, img_meta, **kwargs)
         else:
             return self.forward_test(img, img_meta, **kwargs)
@@ -53,6 +55,7 @@ class SingleStageDetector(nn.Module):
     @property
     def with_rpn(self):
         return hasattr(self, 'rpn_head') and self.rpn_head is not None
+
     # Handle by lightning
     # def init_weights(self, pretrained=None):
     #     if isinstance(pretrained, str):
