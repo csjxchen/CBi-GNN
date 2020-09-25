@@ -5,8 +5,8 @@ from mmcv.parallel import DataContainer as DC
 import torch
 from torch.utils.data import Dataset
 from mmcv.runner import obj_from_dict
-from dets.datasets.transforms import (ImageTransform, BboxTransform)
-from dets.datasets.utils import to_tensor, random_scale
+from mmdet.datasets.transforms import (ImageTransform, BboxTransform)
+from mmdet.datasets.utils import to_tensor, random_scale
 from dets.tools.bbox3d import bbox3d_target
 from dets.tools.anchor import anchor3d_generator
 from dets.tools.point_cloud import voxel_generator
@@ -18,7 +18,7 @@ from dets.tools.bbox3d.geometry import rbbox2d_to_near_bbox, filter_gt_box_outsi
     sparse_sum_for_anchors_mask, fused_get_anchors_area, limit_period, center_to_corner_box3d, points_in_rbbox
 import os
 from dets.tools.point_cloud.voxel_generator import VoxelGenerator
-from dets.ops.points_op import points_op_cpu
+from mmdet.ops.points_op import points_op_cpu
 
 class KittiLiDAR(Dataset):
     def __init__(self, root, 

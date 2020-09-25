@@ -1,14 +1,32 @@
+import os
 from functools import partial
 from typing import Optional, Union, Sequence, Dict, Tuple, List
 
+import numpy as np
 import pytorch_lightning as pl
+from pytorch_lightning import EvalResult
 from torch import optim, nn
 from torch.optim import Optimizer
 
+from tools.test_utils.anno import extract_anno
 from tools.train_utils.parse_losses import parse_losses
 from .detectors.single_stage import SingleStageDetector
 
 from tools.optimization import OptimWrapper, OneCycle
+import tools.kitti_common as kitti
+
+
+def write_anno(anno, img_idx, saveto):
+    template = '{} ' + ' '.join(['{:.4f}' for _ in range(15)]) + '\n'
+    if saveto is not None:
+        of_path = os.path.join(saveto, '%06d.txt' % img_idx)
+        with open(of_path, 'w+') as f:
+            for name, bbox, dim, loc, ry, score, alpha in zip(anno['name'], anno["bbox"], \
+                                                              anno["dimensions"], anno["location"],
+                                                              anno["rotation_y"], anno["score"],
+                                                              anno["alpha"]):
+                line = template.format(name, 0, 0, alpha, *bbox, *dim[[1, 2, 0]], *loc, ry, score)
+                f.write(line)
 
 
 class Cbi_gnn(pl.LightningModule):
@@ -55,7 +73,7 @@ class Cbi_gnn(pl.LightningModule):
 
         return [optimizer], [lr_sch]
 
-    def forward(self, batch):
+    def forward(self, **batch):
         return self.detectors(**batch)
 
     def training_step(self, batch, batch_idx):
@@ -64,6 +82,45 @@ class Cbi_gnn(pl.LightningModule):
         result = pl.TrainResult(minimize=loss)
         result.log_dict(log_vars)
         return result
+
+    def test_step(self, batch, batch_idx) -> EvalResult:
+        results = self(return_loss=False, **batch)
+        checkpoint_n = os.path.splitext(os.path.basename(self.cfg.checkpoint))[0]
+        if self.cfg.save_to_file:
+            saved_dir = os.path.join(self.cfg.work_dir, f"{checkpoint_n}_outs")
+        else:
+            saved_dir = None
+        # with torch.no_grad():
+        # results = model(return_loss=False, **data)
+        image_shape = (375, 1242)
+        annos = []
+        for re in results:
+            img_idx = re['image_idx']
+            if re['bbox'] is not None:
+                anno, num_example = extract_anno(image_shape, re, self.cfg.data.val.class_names)
+                if num_example != 0:
+                    write_anno(anno, img_idx, saved_dir)
+                    anno = {n: np.stack(v) for n, v in anno.items()}
+                else:
+                    anno = kitti.empty_result_anno()
+                    if saved_dir is not None:
+                        of_path = os.path.join(saved_dir, '%06d.txt' % img_idx)
+                        f = open(of_path, 'w+')
+                        f.close()
+            else:
+                anno = kitti.empty_result_anno()
+                if saved_dir is not None:
+                    of_path = os.path.join(saved_dir, '%06d.txt' % img_idx)
+                    f = open(of_path, 'w+')
+                    f.close()
+
+            annos.append(anno)
+
+            num_example = annos[-1]["name"].shape[0]
+            annos[-1]["image_idx"] = np.array(
+                [img_idx] * num_example, dtype=np.int64)
+        # TODO: return something meaningful.
+        return EvalResult()
 
     def _configure_lr_sch(self, optimizer, optim_cfg, lr_cfg, total_epochs, total_iters_each_epoch, last_epoch):
         total_steps = total_iters_each_epoch * total_epochs
