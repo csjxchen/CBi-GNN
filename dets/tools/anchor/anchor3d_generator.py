@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def create_anchors_3d_stride(feature_size,
                              sizes=[1.6, 3.9, 1.56],
                              anchor_strides=[0.4, 0.4, 0.0],
@@ -78,6 +79,7 @@ def create_anchors_3d_range(feature_size,
     ret = np.concatenate(rets, axis=-1)
     return np.transpose(ret, [2, 1, 0, 3, 4, 5])
 
+
 class AnchorGeneratorStride:
     def __init__(self,
                  sizes=[1.6, 3.9, 1.56],
@@ -101,6 +103,7 @@ class AnchorGeneratorStride:
         return create_anchors_3d_stride(
             feature_map_size, self._sizes, self._anchor_strides,
             self._anchor_offsets, self._rotations, self._dtype)
+
 
 class AnchorGeneratorRange:
     def __init__(self,

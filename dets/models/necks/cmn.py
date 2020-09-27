@@ -3,12 +3,12 @@ from torch import nn
 from ..utils import change_default_args, Sequential
 from mmdet.ops.pointnet2 import pointnet2_utils
 import torch
-from mmdet.ops import pts_in_boxes3d
+from dets.tools.ops import pts_in_boxes3d
 from mmdet.core.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss
 from mmdet.core import tensor2points
 import torch.nn.functional as F
 from functools import partial
-from mmdet.ops.pointnet2.layers_utils import Grouper4, Grouper5, Grouper6
+from dets.tools.ops.pointnet2.layers_utils import Grouper4, Grouper5, Grouper6
 from .bignn import BiGNN_V1, BiGNN_V2, BiGNN_V3
 def post_act_block(in_channels, out_channels, kernel_size, indice_key, stride=1, padding=0,
                     conv_type='subm', norm_fn=None):

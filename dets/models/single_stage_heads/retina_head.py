@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from dets.tools.anchor.anchor_generator import AnchorGenerator
 from mmdet.core import (AnchorGenerator, anchor_target, multi_apply,
                         delta2bbox, weighted_smoothl1,
                         weighted_sigmoid_focal_loss)

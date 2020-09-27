@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import torch
 
-from mmdet.ops.iou3d import iou3d_utils
+from dets.tools.ops.iou3d import iou3d_utils
 from mmdet.core import kitti_bbox2results
 
 from .. import builder
@@ -43,7 +43,7 @@ class SingleStageDetector(nn.Module):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        self.init_weights(pretrained)
+        # self.init_weights(pretrained)
 
     def forward(self, img, img_meta, return_loss=True, **kwargs):
         assert return_loss == self.training

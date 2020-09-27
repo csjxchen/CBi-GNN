@@ -4,10 +4,12 @@ import numpy as np
 import math
 from functools import partial
 import torch.optim.lr_scheduler as lr_sched
+from torch import optim
+
 from .fastai_optim import OptimWrapper
 
 
-class LRSchedulerStep(object):
+class LRSchedulerStep(optim.lr_scheduler._LRScheduler):
     def __init__(self, fai_optimizer: OptimWrapper, total_step, lr_phases,
                  mom_phases):
         # if not isinstance(fai_optimizer, OptimWrapper):

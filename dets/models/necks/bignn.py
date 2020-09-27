@@ -1,14 +1,14 @@
 import spconv
 from torch import nn
-from ..utils import change_default_args, Sequential
-from mmdet.ops.pointnet2 import pointnet2_utils
+# from ..utils import change_default_args, Sequential
+# from mmdet.ops.pointnet2 import pointnet2_utils
 import torch
-from mmdet.ops import pts_in_boxes3d
-from mmdet.core.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss
-from mmdet.core import tensor2points
-import torch.nn.functional as F
+# from mmdet.ops import pts_in_boxes3d
+# from mmdet.core.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss
+# from mmdet.core import tensor2points
+# import torch.nn.functional as F
 from functools import partial
-from mmdet.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
+from dets.tools.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 
 def structured_forward(lrx, hrx, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset, cat_original=True):
     lr_indices = lrx.indices.float()

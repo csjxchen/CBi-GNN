@@ -4,10 +4,13 @@ from typing import Optional, Union, Sequence, Dict, Tuple, List
 
 import numpy as np
 import pytorch_lightning as pl
+from mmcv.parallel import collate
 from pytorch_lightning import EvalResult
 from torch import optim, nn
 from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 
+from dets.dataset.dataset_factory import get_dataset
 from tools.test_utils.anno import extract_anno
 from tools.train_utils.parse_losses import parse_losses
 from .detectors.single_stage import SingleStageDetector
@@ -21,7 +24,7 @@ def write_anno(anno, img_idx, saveto):
     if saveto is not None:
         of_path = os.path.join(saveto, '%06d.txt' % img_idx)
         with open(of_path, 'w+') as f:
-            for name, bbox, dim, loc, ry, score, alpha in zip(anno['name'], anno["bbox"], \
+            for name, bbox, dim, loc, ry, score, alpha in zip(anno['name'], anno["bbox"],
                                                               anno["dimensions"], anno["location"],
                                                               anno["rotation_y"], anno["score"],
                                                               anno["alpha"]):
@@ -30,13 +33,17 @@ def write_anno(anno, img_idx, saveto):
 
 
 class Cbi_gnn(pl.LightningModule):
-    def __init__(self, config, train_cfg, test_cfg, train_dataloader_len):
+    def __init__(self, config):
         super(Cbi_gnn, self).__init__()
         self.cfg = config
+        train_cfg, test_cfg = config.train_cfg, config.test_cfg
         self.detectors = SingleStageDetector(train_cfg=train_cfg, test_cfg=test_cfg, **config.model)
         self.optim_cfg = config.optimizer
         self.lr_cfg = config.lr_config
-        self.train_dataloader_len = train_dataloader_len
+        self.train_dataloader_len = None
+
+    def forward(self, batch):
+        return self.detectors(**batch)
 
     def configure_optimizers(
             self,
@@ -68,23 +75,48 @@ class Cbi_gnn(pl.LightningModule):
         else:
             raise NotImplementedError
 
-        lr_sch = self._configure_lr_sch(optimizer, optim_cfg, self.lr_cfg, total_epochs=self.total_epochs,
+        lr_sch = self._configure_lr_sch(optimizer, optim_cfg, self.lr_cfg, total_epochs=self.cfg.total_epochs,
                                         total_iters_each_epoch=self.train_dataloader_len, last_epoch=-1)
 
         return [optimizer], [lr_sch]
 
-    def forward(self, **batch):
-        return self.detectors(**batch)
+    def train_dataloader(self) -> DataLoader:
+        kitti_dataset = get_dataset(self.cfg.data.train)
+        batch_size = self.cfg.data.imgs_per_gpu * self.cfg.gpu_count
+        num_workers = self.cfg.data.workers_per_gpu * self.cfg.gpu_count
+        dataloader = DataLoader(
+            dataset=kitti_dataset,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            collate_fn=partial(collate, samples_per_gpu=self.cfg.data.imgs_per_gpu),
+            pin_memory=False
+        )
+        self.train_dataloader_len = len(dataloader)
+        return dataloader
+
+    def test_dataloader(self) -> Union[DataLoader, List[DataLoader]]:
+        kitti_dataset = get_dataset(self.cfg.data.val)
+        return DataLoader(
+            dataset=kitti_dataset,
+            batch_size=1,
+            num_workers=self.cfg.data.workers_per_gpu,
+            collate_fn=partial(collate, samples_per_gpu=1),
+            pin_memory=False
+
+        )
 
     def training_step(self, batch, batch_idx):
         losses = self(batch)
         loss, log_vars = parse_losses(losses)
         result = pl.TrainResult(minimize=loss)
+        # TODO: Anything to log?
         result.log_dict(log_vars)
         return result
 
     def test_step(self, batch, batch_idx) -> EvalResult:
+
         results = self(return_loss=False, **batch)
+
         checkpoint_n = os.path.splitext(os.path.basename(self.cfg.checkpoint))[0]
         if self.cfg.save_to_file:
             saved_dir = os.path.join(self.cfg.work_dir, f"{checkpoint_n}_outs")
@@ -131,6 +163,7 @@ class Cbi_gnn(pl.LightningModule):
             )
 
         elif lr_cfg.policy == 'cosine':
+            raise NotImplementedError
             lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, total_steps, last_epoch=last_epoch)
 
         elif lr_cfg.policy == 'step':

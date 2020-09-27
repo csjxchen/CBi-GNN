@@ -1,5 +1,5 @@
 model = dict(
-    type='SingleStageDetector',
+    # type='SingleStageDetector',
     backbone=dict(
         type='SimpleVoxel',
         num_input_features=4,
@@ -79,7 +79,8 @@ test_cfg = dict(
 )
 # dataset settings
 dataset_type = 'KittiLiDAR'
-data_root = '/chenjiaxin/research/PointRCNN/data/KITTI/object/'
+data_root = '/cjx/research/PointRCNN/data/KITTI/object/'
+# data_root = '/chenjiaxin/research/PointRCNN/data/KITTI/object/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 data = dict(

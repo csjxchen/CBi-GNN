@@ -7,6 +7,11 @@ from .sequential import Sequential
 import inspect
 import torch
 
+__all__ = [
+    'ConvModule', 'build_norm_layer', 'xavier_init', 'normal_init',
+    'uniform_init', 'kaiming_init', 'bias_init_with_prob','Empty',
+    'change_default_args','Sequential','one_hot', 'get_paddings_indicator'
+]
 def get_paddings_indicator(actual_num, max_num, axis=0):
     """Create boolean mask by actually number of a padded tensor.
     Args:
@@ -59,8 +64,3 @@ def one_hot(tensor, depth, dim=-1, on_value=1.0, dtype=torch.float32):
     tensor_onehot.scatter_(dim, tensor.unsqueeze(dim).long(), on_value)
     return tensor_onehot
 
-__all__ = [
-    'ConvModule', 'build_norm_layer', 'xavier_init', 'normal_init',
-    'uniform_init', 'kaiming_init', 'bias_init_with_prob','Empty',
-    'change_default_args','Sequential','one_hot', 'get_paddings_indicator'
-]
