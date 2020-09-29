@@ -1,5 +1,5 @@
 import numpy as np
-from mmdet.ops.points_op import points_to_voxel
+from dets.tools.extras.points_op import points_to_voxel
 
 class VoxelGenerator:
     def __init__(self,
@@ -8,6 +8,12 @@ class VoxelGenerator:
                  max_num_points,
                  max_voxels=20000):
         point_cloud_range = np.array(point_cloud_range, dtype=np.float32)
+        ''' 
+                    z
+                    |  x
+                    | /
+              y_____|/
+        '''
         # [0, -40, -3, 70.4, 40, 1]
         voxel_size = np.array(voxel_size, dtype=np.float32)
         grid_size = (
@@ -18,7 +24,7 @@ class VoxelGenerator:
         self._max_num_points = max_num_points
         self._max_voxels = max_voxels
         self._grid_size = grid_size
-
+    
     def generate(self, points):
         return points_to_voxel(
             points, self._voxel_size, self._point_cloud_range,

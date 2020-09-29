@@ -172,7 +172,6 @@ def is_line_segment_cross(lines1, lines2):
         _ccw(A, C, D) != _ccw(B, C, D),
         _ccw(A, B, C) != _ccw(A, B, D))
 
-
 @numba.jit(nopython=False)
 def surface_equ_3d_jit(polygon_surfaces):
     # return [a, b, c], d in ax+by+cz+d=0

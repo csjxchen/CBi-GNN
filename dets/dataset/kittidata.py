@@ -22,10 +22,9 @@ from dets.ops.points_op import points_op_cpu
 
 class KittiLiDAR(Dataset):
     def __init__(self, root, 
-                    ann_file,
+                 ann_file,
                  img_prefix,
                  img_norm_cfg,
-                 img_scale=(1242, 375),
                  size_divisor=32,
                  proposal_file=None,
                  flip_ratio=0.5,
@@ -40,26 +39,26 @@ class KittiLiDAR(Dataset):
                  target_encoder=None,
                  out_size_factor=2,
                  test_mode=False):
-        self.root = root
-        # self.img_scales = img_scale if isinstance(img_scale,
-                                                #   list) else [img_scale]
-        # assert mmcv.is_list_of(self.img_scales, tuple)
         
+        self.root = root    
         self.class_names = class_names
         self.test_mode = test_mode
         self.with_label = with_label
         self.with_mask = with_mask
         self.with_point = with_point
-
         self.lidar_prefix = osp.join(root, 'velodyne_reduced')
         self.calib_prefix = osp.join(root, 'calib')
         self.label_prefix = osp.join(root, 'label_2')
 
         with open(ann_file, 'r') as f:
             self.sample_ids = list(map(int, f.read().splitlines()))
+        
+        # delete set_group_flag
         self.img_manager = ImageManager(root, img_norm_cfg=img_norm_cfg, size_divisor=size_divisor)
         self.auxiliary_tools(augmentor, generator, target_encoder, out_size_factor, anchor_area_threshold)
-    def auxiliary_tools(self, augmentor, generator, target_encoder, out_size_factor, anchor_area_threshold):
+    
+    def auxiliary_tools(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
+        # give dict args 
         self.augmentor = obj_from_dict(augmentor, point_augmentor)
         self.generator = obj_from_dict(generator, VoxelGenerator)
         self.target_encoder = obj_from_dict(target_encoder, bbox3d_target) if target_encoder is not None else None
@@ -67,16 +66,23 @@ class KittiLiDAR(Dataset):
         self.anchor_area_threshold = anchor_area_threshold
         # anchor
         if anchor_generator is not None:
+            ''' 
+                            z
+                            |  x
+                            | /
+                        y___|/
+            '''
             feature_map_size = self.generator.grid_size[:2] // self.out_size_factor
             feature_map_size = [*feature_map_size, 1][::-1]
+            anchor_generator = obj_from_dict(anchor_generator, anchor3d_generator)
             anchors = anchor_generator(feature_map_size)
             self.anchors = anchors.reshape([-1, 7])
             self.anchors_bv = rbbox2d_to_near_bbox(
                 self.anchors[:, [0, 1, 3, 4, 6]])
+        
         else:
             self.anchors=None
-    
-    
+
     def __len__(self):
         return len(self.sample_ids)
 
@@ -99,7 +105,6 @@ class KittiLiDAR(Dataset):
         # load image
         # img = mmcv.imread(osp.join(self.img_prefix, '%06d.png' % sample_id))
         img, img_shape, pad_shape, scale_factor = self.img_manager(sample_id, scale=1, flip=False)
-        
         # --------------------------------------------------------------------------
         objects = read_label(osp.join(self.label_prefix, '%06d.txt' % sample_id))
         calib = Calibration(osp.join(self.calib_prefix, '%06d.txt' % sample_id))
@@ -107,7 +112,6 @@ class KittiLiDAR(Dataset):
         gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
         gt_types = [obj.type for obj in objects if obj.type not in ["DontCare"]]
         # --------------------------------------------------------------------------
-
         # transfer from cam to lidar coordinates
         if len(gt_bboxes) != 0:
             gt_bboxes[:, :3] = project_rect_to_velo(gt_bboxes[:, :3], calib)
@@ -122,10 +126,11 @@ class KittiLiDAR(Dataset):
             img=to_tensor(img),
             img_meta = DC(img_meta, cpu_only=True)
         )
+        # initial anchors for one-stage detector 
         if self.anchors is not None:
             # print("using andchors mask!!!")
             data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32)))
-
+        # if with_mask
         if self.with_mask:
             NotImplemented
 
@@ -142,9 +147,7 @@ class KittiLiDAR(Dataset):
             # to avoid overlapping point (option)
             masks = points_in_rbbox(points, sampled_gt_boxes)
             #masks = points_op_cpu.points_in_bbox3d_np(points[:,:3], sampled_gt_boxes)
-
             points = points[np.logical_not(masks.any(-1))]
-
             # paste sampled points to the scene
             points = np.concatenate([sampled_points, points], axis=0)
 
@@ -161,7 +164,7 @@ class KittiLiDAR(Dataset):
             gt_bboxes, points = self.augmentor.random_flip(gt_bboxes, points)
             gt_bboxes, points = self.augmentor.global_rotation(gt_bboxes, points)
             gt_bboxes, points = self.augmentor.global_scaling(gt_bboxes, points)
-
+        
         if isinstance(self.generator, VoxelGenerator):
             #voxels, coordinates, num_points = self.generator.generate(points)
             voxel_size = self.generator.voxel_size
@@ -203,7 +206,7 @@ class KittiLiDAR(Dataset):
 
         else:
             NotImplementedError
-
+        
         # skip the image if there is no valid gt bbox
         if len(gt_bboxes) == 0:
             return None
@@ -215,6 +218,7 @@ class KittiLiDAR(Dataset):
         if self.with_label:
             data['gt_labels'] = DC(to_tensor(gt_labels))
             data['gt_bboxes'] = DC(to_tensor(gt_bboxes))
+        
         return data
 
     def prepare_test_img(self, idx):
@@ -239,7 +243,7 @@ class KittiLiDAR(Dataset):
             else:
                 gt_bboxes = None
                 gt_labels = None
-
+        
         img_meta = dict(
             img_shape=img_shape,
             sample_idx=sample_id,
@@ -250,7 +254,7 @@ class KittiLiDAR(Dataset):
             img=to_tensor(img),
             img_meta=DC(img_meta, cpu_only=True)
         )
-
+        
         if self.anchors is not None:
             data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32)))
 

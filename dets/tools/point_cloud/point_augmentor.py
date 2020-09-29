@@ -1,6 +1,6 @@
 import numpy as np
 import pathlib
-from mmdet.core.bbox3d.geometry import (center_to_corner_box2d,\
+from dets.tools.bbox3d.geometry import (center_to_corner_box2d,\
                                         center_to_corner_box3d,\
                                         box2d_to_corner_jit,\
                                         points_in_convex_polygon_3d_jit,\

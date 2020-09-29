@@ -10,16 +10,18 @@ def create_anchors_3d_stride(feature_size,
     Args:
         feature_size: list [D, H, W](zyx)
         sizes: [N, 3] list of list or array, size of anchors, xyz
-
+    
     Returns:
         anchors: [*feature_size, num_sizes, num_rots, 7] tensor.
     """
     # almost 2x faster than v1
     x_stride, y_stride, z_stride = anchor_strides
     x_offset, y_offset, z_offset = anchor_offsets
+    # assign the centers at three axis respectively
     z_centers = np.arange(feature_size[0], dtype=dtype)
     y_centers = np.arange(feature_size[1], dtype=dtype)
     x_centers = np.arange(feature_size[2], dtype=dtype)
+
     z_centers = z_centers * z_stride + z_offset
     y_centers = y_centers * y_stride + y_offset
     x_centers = x_centers * x_stride + x_offset
@@ -27,6 +29,7 @@ def create_anchors_3d_stride(feature_size,
     rotations = np.array(rotations, dtype=dtype)
     rets = np.meshgrid(
         x_centers, y_centers, z_centers, rotations, indexing='ij')
+    
     tile_shape = [1] * 5
     tile_shape[-2] = int(sizes.shape[0])
     for i in range(len(rets)):
@@ -38,8 +41,9 @@ def create_anchors_3d_stride(feature_size,
     sizes = np.tile(sizes, tile_size_shape)
     rets.insert(3, sizes)
     ret = np.concatenate(rets, axis=-1)
-    return np.transpose(ret, [2, 1, 0, 3, 4, 5])
 
+    # z_len, y_len, x_len, size_len, rotation_len, data_len
+    return np.transpose(ret, [2, 1, 0, 3, 4, 5])
 
 def create_anchors_3d_range(feature_size,
                             anchor_range,
@@ -101,7 +105,7 @@ class AnchorGeneratorStride:
         return create_anchors_3d_stride(
             feature_map_size, self._sizes, self._anchor_strides,
             self._anchor_offsets, self._rotations, self._dtype)
-
+    
 class AnchorGeneratorRange:
     def __init__(self,
                  anchor_ranges,
