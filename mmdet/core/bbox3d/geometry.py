@@ -1,5 +1,5 @@
 import numpy as np
-import numba
+# import numba
 
 def get_frustum(bbox_image, C, near_clip=0.001, far_clip=100):
     fku = C[0, 0]
@@ -73,7 +73,7 @@ def points_in_rbbox(points, rbbox, lidar=True):
     indices = points_in_convex_polygon_3d_jit(points[:, :3], surfaces)
     return indices
 
-@numba.jit(nopython=False)
+# @numba.jit(nopython=False)
 def corner_to_surfaces_3d(corners):
     """convert 3d box corners from corner function above
     to surfaces that normal vectors all direct to internal.
@@ -94,7 +94,7 @@ def corner_to_surfaces_3d(corners):
     ]).transpose([2, 0, 1, 3])
     return surfaces
 
-@numba.njit
+# @numba.njit
 def is_line_segment_intersection_jit(lines1, lines2):
     """check if line segments1 and line segments2 have cross point
 
@@ -126,7 +126,7 @@ def is_line_segment_intersection_jit(lines1, lines2):
     return ret
 
 
-@numba.njit
+# @numba.njit
 def line_segment_intersection(line1, line2, intersection):
     A = line1[0]
     B = line1[1]
@@ -173,7 +173,7 @@ def is_line_segment_cross(lines1, lines2):
         _ccw(A, B, C) != _ccw(A, B, D))
 
 
-@numba.jit(nopython=False)
+# @numba.jit(nopython=False)
 def surface_equ_3d_jit(polygon_surfaces):
     # return [a, b, c], d in ax+by+cz+d=0
     # polygon_surfaces: [num_polygon, num_surfaces, num_points_of_polygon, 3]
@@ -186,7 +186,7 @@ def surface_equ_3d_jit(polygon_surfaces):
     return normal_vec, -d
 
 
-@numba.jit(nopython=False)
+# @numba.jit(nopython=False)
 def points_in_convex_polygon_3d_jit(points,
                                     polygon_surfaces,
                                     num_surfaces=None):
@@ -226,7 +226,7 @@ def points_in_convex_polygon_3d_jit(points,
     return ret
 
 
-@numba.jit
+# @numba.jit
 def points_in_convex_polygon_jit(points, polygon, clockwise=True):
     """check points is in 2d convex polygons. True when point in polygon
     Args:
@@ -425,7 +425,7 @@ def rbbox2d_to_near_bbox(rbboxes):
     bboxes = center_to_minmax_2d(bboxes_center[:, :2], bboxes_center[:, 2:])
     return bboxes
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def iou_jit(boxes, query_boxes, eps=0.0):
     """calculate box iou. note that jit version runs 2x faster than cython in
     my machine!
@@ -456,7 +456,7 @@ def iou_jit(boxes, query_boxes, eps=0.0):
                     overlaps[n, k] = iw * ih / ua
     return overlaps
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def distance_similarity(points,
                         qpoints,
                         dist_norm,
@@ -503,7 +503,7 @@ def rotation_points_single_angle(points, angle, axis=0):
 
     return points @ rot_mat_T
 
-@numba.njit
+# @numba.njit
 def corner_to_standup_nd_jit(boxes_corner):
     num_boxes = boxes_corner.shape[0]
     ndim = boxes_corner.shape[-1]
@@ -515,7 +515,7 @@ def corner_to_standup_nd_jit(boxes_corner):
             result[i, j + ndim] = np.max(boxes_corner[i, :, j])
     return result
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def box2d_to_corner_jit(boxes):
     num_box = boxes.shape[0]
     corners_norm = np.zeros((4, 2), dtype=boxes.dtype)
@@ -558,7 +558,7 @@ def filter_gt_box_outside_range(gt_boxes, limit_range):
         gt_boxes_bv.reshape(-1, 2), bounding_box)
     return np.any(ret.reshape(-1, 4), axis=1)
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def corner_to_surfaces_3d_jit(corners):
     """convert 3d box corners from corner function above
     to surfaces that normal vectors all direct to internal.
@@ -580,7 +580,7 @@ def corner_to_surfaces_3d_jit(corners):
                 surfaces[i, j, k] = corners[i, corner_idxes[j, k]]
     return surfaces
 
-@numba.njit
+# @numba.njit
 def rotation_box2d_jit(corners, angle, rot_mat_T):
     rot_sin = np.sin(angle)
     rot_cos = np.cos(angle)
@@ -590,7 +590,7 @@ def rotation_box2d_jit(corners, angle, rot_mat_T):
     rot_mat_T[1, 1] = rot_cos
     corners[:] = corners @ rot_mat_T
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def box_collision_test(boxes, qboxes, clockwise=True):
     N = boxes.shape[0]
     K = qboxes.shape[0]
@@ -672,7 +672,7 @@ def box_collision_test(boxes, qboxes, clockwise=True):
                             ret[i, j] = True  # collision.
     return ret
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def sparse_sum_for_anchors_mask(coors, shape):
     ret = np.zeros(shape, dtype=np.float32)
     for i in range(coors.shape[0]):
@@ -681,7 +681,7 @@ def sparse_sum_for_anchors_mask(coors, shape):
     return ret
 
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def fused_get_anchors_area(dense_map, anchors_bv, stride, offset,
                            grid_size):
     anchor_coor = np.zeros(anchors_bv.shape[1:], dtype=np.int32)

@@ -23,7 +23,7 @@ from mmdet.core.bbox3d.geometry import rbbox2d_to_near_bbox, iou_jit, distance_s
 from mmdet.core.post_processing.rotate_nms_gpu import rotate_iou_gpu, rotate_iou_gpu_eval
 import numba
 
-@numba.jit(nopython=True, parallel=True)
+# @numba.jit(nopython=True, parallel=True)
 def d3_box_overlap_kernel(boxes, qboxes, rinc, criterion=-1):
     N, K = boxes.shape[0], qboxes.shape[0]
     for i in range(N):

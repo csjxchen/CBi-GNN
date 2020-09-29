@@ -20,7 +20,7 @@ def select_transform(transform, indices):
             result[i] = transform[i, indices[i]]
     return result
 
-@numba.njit
+# @numba.njit
 def rotation_matrix_3d_(rot_mat_T, angle, axis):
     rot_sin = np.sin(angle)
     rot_cos = np.cos(angle)
@@ -41,7 +41,7 @@ def rotation_matrix_3d_(rot_mat_T, angle, axis):
         rot_mat_T[2, 1] = rot_sin
         rot_mat_T[2, 2] = rot_cos
 
-@numba.njit
+# @numba.njit
 def points_transform_(points, centers, point_masks, loc_transform,
                       rot_transform, valid_mask):
     num_box = centers.shape[0]
@@ -59,7 +59,7 @@ def points_transform_(points, centers, point_masks, loc_transform,
                     points[i, :3] += loc_transform[j]
                     break  # only apply first box's transform
 
-@numba.njit
+# @numba.njit
 def box3d_transform_(boxes, loc_transform, rot_transform, valid_mask):
     num_box = boxes.shape[0]
     for i in range(num_box):
@@ -68,7 +68,7 @@ def box3d_transform_(boxes, loc_transform, rot_transform, valid_mask):
             boxes[i, 6] += rot_transform[i]
 
 
-@numba.njit
+# @numba.njit
 def noise_per_box(boxes, valid_mask, loc_noises, rot_noises):
     # boxes: [N, 5]
     # valid_mask: [N]
