@@ -60,7 +60,7 @@ class KittiLiDAR(Dataset):
     def auxiliary_tools(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
         # give dict args 
         self.augmentor = obj_from_dict(augmentor, point_augmentor)
-        self.generator = obj_from_dict(generator, VoxelGenerator)
+        self.generator = obj_from_dict(generator, voxel_generator)
         self.target_encoder = obj_from_dict(target_encoder, bbox3d_target) if target_encoder is not None else None
         self.out_size_factor = out_size_factor
         self.anchor_area_threshold = anchor_area_threshold
@@ -99,13 +99,13 @@ class KittiLiDAR(Dataset):
                 idx = self._rand_another()
                 continue
             return data
-    
+        
     def prepare_train_img(self, idx):
         sample_id = self.sample_ids[idx]
         # load image
         # img = mmcv.imread(osp.join(self.img_prefix, '%06d.png' % sample_id))
         img, img_shape, pad_shape, scale_factor = self.img_manager(sample_id, scale=1, flip=False)
-        # --------------------------------------------------------------------------
+
         objects = read_label(osp.join(self.label_prefix, '%06d.txt' % sample_id))
         calib = Calibration(osp.join(self.calib_prefix, '%06d.txt' % sample_id))
         gt_bboxes = [obj.box3d for obj in objects if obj.type not in ["DontCare"]]
@@ -143,7 +143,7 @@ class KittiLiDAR(Dataset):
             gt_bboxes = np.concatenate([gt_bboxes, sampled_gt_boxes])
             gt_types = gt_types + sampled_gt_types
             assert len(gt_types) == len(gt_bboxes)
-
+            
             # to avoid overlapping point (option)
             masks = points_in_rbbox(points, sampled_gt_boxes)
             #masks = points_op_cpu.points_in_bbox3d_np(points[:,:3], sampled_gt_boxes)

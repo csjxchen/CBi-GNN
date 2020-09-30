@@ -158,24 +158,21 @@ class PointAugmentor:
             for info in db_infos:
                 if info["num_points_in_gt"] >= min_num_points:
                     filtered_infos.append(info)
+            
             db_infos = filtered_infos
-
             new_db_infos = [
                 info for info in db_infos
                 if info["difficulty"] not in removed_difficulties
             ]
-
             print("After filter database:")
             print(f"load {len(new_db_infos)} {sample_class} database infos")
-
             self._samplers.append(BatchSampler(new_db_infos, sample_class))
-
         self.root_path = root_path
         # self._db_infos = new_db_infos
         self._sample_classes = sample_classes
         self._sample_max_num = sample_max_num
         # self._sampler = BatchSampler(self._db_infos, sample_class)
-
+        
         self._global_rot_range = global_rot_range
         self._gt_rot_range = gt_rot_range
         self._center_noise_std = center_noise_std

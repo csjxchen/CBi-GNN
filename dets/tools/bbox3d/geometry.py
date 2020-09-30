@@ -39,7 +39,7 @@ def box_camera_to_lidar(data, r_rect, velo2cam):
     r = data[:, 6:7]
     xyz_lidar = camera_to_lidar(xyz, r_rect, velo2cam)
     return np.concatenate([xyz_lidar, w, l, h, r], axis=1)
-
+    
 def camera_to_lidar(points, r_rect, velo2cam):
     points_shape = list(points.shape[0:-1])
     if points.shape[-1] == 3:
