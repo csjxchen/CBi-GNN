@@ -177,13 +177,13 @@ def create_groundtruth_database(data_path,
                                 lidar_only=False,
                                 bev_only=False,
                                 coors_range=None):
-    """[summary]
+    """[]
     Args:
-        data_path ([str]): [Path of source data]
-        info_path ([str], optional): []. Defaults to None.
-        used_classes ([list(str)], optional): [description]. Defaults to None.
-        database_save_path ([str], optional): [description]. Defaults to None.
-        db_info_save_path ([str], optional): [description]. Defaults to None.
+        data_path (str): Path of source data
+        info_path (str, optional): .
+        used_classes (list(str), optional): [description]. Defaults to None.
+        database_save_path (str, optional): [description]. Defaults to None.
+        db_info_save_path (str, optional): [description]. Defaults to None.
         relative_path (bool, optional): [description]. Defaults to True.
         lidar_only (bool, optional): [description]. Defaults to False.
         bev_only (bool, optional): [description]. Defaults to False.
@@ -305,7 +305,7 @@ if __name__ == '__main__':
                                 info_path='../PointRCNN/data/KITTI/object/kitti_infos_trainval.pkl', \
                                 db_info_save_path='../PointRCNN/data/KITTI/object/kitti_dbinfos_trainval.pkl')
     
-
+    
     # create_groundtruth_database(data_path='../PointRCNN/data/KITTI/object', \
     #                             info_path='../PointRCNN/data/KITTI/object/kitti_infos_train.pkl', \
     #                             db_info_save_path='../PointRCNN/data/KITTI/object/kitti_dbinfos_train.pkl')
