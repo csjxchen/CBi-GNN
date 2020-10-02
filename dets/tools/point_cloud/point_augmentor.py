@@ -235,7 +235,7 @@ class PointAugmentor:
                 s_points[:, :3] += info["box3d_lidar"][:3]
                 s_points_list.append(s_points)
                 sampled_gt_types.append(info['name'])
-
+            
             return sampled_gt_boxes.astype(np.float32), sampled_gt_types, np.concatenate(s_points_list, axis=0)
 
         else:
@@ -311,7 +311,7 @@ class PointAugmentor:
             points: [M, 4], point cloud in lidar.
         """
         num_boxes = gt_boxes.shape[0]
-
+        
         if valid_mask is None:
             valid_mask = np.ones((num_boxes,), dtype=np.bool_)
         center_noise_std = np.array(self._center_noise_std, dtype=gt_boxes.dtype)

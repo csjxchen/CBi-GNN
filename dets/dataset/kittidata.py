@@ -145,12 +145,13 @@ class KittiLiDAR(Dataset):
             assert len(gt_types) == len(gt_bboxes)
             
             # to avoid overlapping point (option)
+            # no any enlarging operation in it
             masks = points_in_rbbox(points, sampled_gt_boxes)
-            #masks = points_op_cpu.points_in_bbox3d_np(points[:,:3], sampled_gt_boxes)
+            # masks = points_op_cpu.points_in_bbox3d_np(points[:,:3], sampled_gt_boxes)
             points = points[np.logical_not(masks.any(-1))]
             # paste sampled points to the scene
             points = np.concatenate([sampled_points, points], axis=0)
-
+            
             # select the interest classes
             selected = [i for i in range(len(gt_types)) if gt_types[i] in self.class_names]
             gt_bboxes = gt_bboxes[selected, :]
@@ -159,7 +160,7 @@ class KittiLiDAR(Dataset):
             # force van to have same label as car
             gt_types = ['Car' if n == 'Van' else n for n in gt_types]
             gt_labels = np.array([self.class_names.index(n) + 1 for n in gt_types], dtype=np.int64)
-
+            
             self.augmentor.noise_per_object_(gt_bboxes, points, num_try=100)
             gt_bboxes, points = self.augmentor.random_flip(gt_bboxes, points)
             gt_bboxes, points = self.augmentor.global_rotation(gt_bboxes, points)
@@ -170,9 +171,9 @@ class KittiLiDAR(Dataset):
             voxel_size = self.generator.voxel_size
             pc_range = self.generator.point_cloud_range
             grid_size = self.generator.grid_size
-
             keep = points_op_cpu.points_bound_kernel(points, pc_range[:3], pc_range[3:])
             voxels = points[keep, :]
+            # z y x
             coordinates = ((voxels[:, [2, 1, 0]] - np.array(pc_range[[2,1,0]], dtype=np.float32)) / np.array(
                 voxel_size[::-1], dtype=np.float32)).astype(np.int32)
             num_points = np.ones(len(keep)).astype(np.int32)
