@@ -1,5 +1,6 @@
 import os.path as osp
 import mmcv
+from collections  import defaultdict
 import numpy as np
 from mmcv.parallel import DataContainer as DC
 import torch
@@ -82,7 +83,7 @@ class KittiLiDAR(Dataset):
         
         else:
             self.anchors=None
-
+    
     def __len__(self):
         return len(self.sample_ids)
 
@@ -182,22 +183,24 @@ class KittiLiDAR(Dataset):
             data['coordinates'] = DC(to_tensor(coordinates))
             data['num_points'] = DC(to_tensor(num_points))
 
-            if self.anchor_area_threshold >= 0 and self.anchors is not None and self.with_mask:
+            if self.anchor_area_threshold >= 0 and self.anchors is not None: 
+                 self.with_mask:
                 dense_voxel_map = sparse_sum_for_anchors_mask(
                     coordinates, tuple(grid_size[::-1][1:]))
                 dense_voxel_map = dense_voxel_map.cumsum(0)
                 dense_voxel_map = dense_voxel_map.cumsum(1)
-                anchors_area = fused_get_anchors_area(
-                    dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
-                anchors_mask = anchors_area > self.anchor_area_threshold
-                data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
-                # print(data['anchors_mask'].shape, data['anchors_mask'].dtype)
-            else:
-                N = self.anchors_bv.shape[0]
-                anchors_area = np.ones((N), dtype=np.float32) + 10
-                anchors_mask = anchors_area > self.anchor_area_threshold
-                # print(N, anchors_mask.sum())
-                data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
+                if self.with_mask:
+                    mask = fused_get_anchors_area(
+                        dense_voxel_map, v, voxel_size, pc_range,
+                        grid_size) > self.anchor_area_threshold
+                    anchors_mask[k] = DC(to_tensor(mask.astype(np.bool)))
+                    data['anchors_mask'] = anchors_mask
+                else:
+                    N = self.anchors_bv.shape[0]
+                    anchors_area = np.ones((N), dtype=np.float32) + 10
+                    anchors_mask = anchors_area > self.anchor_area_threshold
+                    # print(N, anchors_mask.sum())
+                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.bool)))
 
             # filter gt_bbox out of range
             bv_range = self.generator.point_cloud_range[[0, 1, 3, 4]]
@@ -280,21 +283,22 @@ class KittiLiDAR(Dataset):
             data['coordinates'] = DC(to_tensor(coordinates))
             data['num_points'] = DC(to_tensor(num_points))
 
-            if self.anchor_area_threshold >= 0 and self.anchors is not None and self.with_mask:
+            if self.anchor_area_threshold >= 0 and self.anchors is not None :
                 dense_voxel_map = sparse_sum_for_anchors_mask(
                     coordinates, tuple(grid_size[::-1][1:]))
                 dense_voxel_map = dense_voxel_map.cumsum(0)
                 dense_voxel_map = dense_voxel_map.cumsum(1)
-                anchors_area = fused_get_anchors_area(
-                    dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
-                anchors_mask = anchors_area > self.anchor_area_threshold
-                data['anchors_mask'] =  DC(to_tensor(anchors_mask.astype(np.uint8)))
-            else:
-                N = self.anchors_bv.shape[0]
-                anchors_area = np.ones((N), dtype=np.float32) + 10
-                anchors_mask = anchors_area > self.anchor_area_threshold
-                # print(N, anchors_mask.sum())
-                data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
+                if self.with_mask:
+                    anchors_area = fused_get_anchors_area(
+                        dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
+                    anchors_mask = anchors_area > self.anchor_area_threshold
+                    data['anchors_mask'] =  DC(to_tensor(anchors_mask.astype(np.uint8)))
+                else:
+                    N = self.anchors_bv.shape[0]
+                    anchors_area = np.ones((N), dtype=np.float32) + 10
+                    anchors_mask = anchors_area > self.anchor_area_threshold
+                    # print(N, anchors_mask.sum())
+                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
 
 
 
@@ -307,7 +311,36 @@ class KittiLiDAR(Dataset):
 
 
         return data
-
+    
+    @staticmethod
+    def collate_fn(self, batch_list):
+        ret = defaultdict(list)
+        # ret = {}
+        for example in batch_list:
+            for k, v in example.items() 
+        for key, elems in batch_args.items():
+            if key in [
+                'voxels', 'num_points',
+                ]:
+                # if key== 'voxels':
+                #     print(elems[0].shape)
+                ret[key] = torch.cat(elems, dim=0)
+            elif key == 'coordinates':
+                coors = []
+                for i, coor in enumerate(elems):
+                    coor_pad = F.pad(
+                        coor, [1, 0, 0, 0],
+                        mode='constant',
+                        value=i)
+                    coors.append(coor_pad)
+                ret[key] = torch.cat(coors, dim=0)
+            elif key in [
+                'img_meta', 'gt_labels', 'gt_bboxes',
+            ]:
+                ret[key] = elems
+            else:
+                ret[key] = torch.stack(elems, dim=0)
+        return ret
 class ImageManager(object):
     def __init__(self, root, img_norm_cfg, size_divisor=None):
         self.path = osp.join(root, 'image_2')

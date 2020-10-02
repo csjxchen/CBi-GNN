@@ -1,4 +1,6 @@
 import torch.nn as nn 
+from .rfn import RFN
+from .rpn import RPN
 
 class Detector(nn.Module):
     def __init__(self, model_cfg,
@@ -12,9 +14,28 @@ class Detector(nn.Module):
             test_cfg (dict): [description]
         """
         if "rpn" in model_cfg.keys():
-            self.rpn  = RPN(model_cfg.rpn)
+            self.rpn  = RPN(model_cfg.rpn, train_cfg.rpn, test_cfg.rpn)
         
         if "rfn" in model_cfg.keys():
-            self.rfn  = RPN(model_cfg.rfn)
+            self.rfn  = RFN(model_cfg.rfn, train_cfg.rfn, test_cfg.rfn)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+    
+
+
+    def forward(self,  data_dict):
+        """forward process of detector 
+            Args:
+                data_dict:{'gt_labels': [class]
+                        'gt_boxes': list( [xyzwlhr]) # represented in velodyne coordinates
+                        'anchors_mask': list((176 * 200, )    
+                        'voxels':  xyz_lidar/voxel_size  # n x 3 FloatTensor, 
+                        'coordinates': zyx_indices       # n x 3 FloatTensor, 
+                        'num_points':  float32           # num of points in range
+                        'img_meta': dict(
+                                img_shape=img_shape,
+                                sample_idx=sample_id,
+                                calib=calib
+                                )
+                        }   
+        """
