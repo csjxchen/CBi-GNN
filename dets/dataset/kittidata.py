@@ -314,11 +314,13 @@ class KittiLiDAR(Dataset):
     
     @staticmethod
     def collate_fn(self, batch_list):
-        ret = defaultdict(list)
-        # ret = {}
+        example_merged = defaultdict(list)
         for example in batch_list:
-            for k, v in example.items() 
-        for key, elems in batch_args.items():
+            for k, v in example.items():
+                example_merged[k].append(v)
+    
+        ret = {}
+        for key, elems in example_merged.items():
             if key in [
                 'voxels', 'num_points',
                 ]:
@@ -340,6 +342,7 @@ class KittiLiDAR(Dataset):
                 ret[key] = elems
             else:
                 ret[key] = torch.stack(elems, dim=0)
+        
         return ret
 class ImageManager(object):
     def __init__(self, root, img_norm_cfg, size_divisor=None):
