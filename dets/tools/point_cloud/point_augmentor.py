@@ -180,6 +180,21 @@ class PointAugmentor:
         self._max_scale = scale_range[1]
 
     def sample_all(self, gt_boxes, gt_types):
+
+        """
+        Summary:
+            first: set the max sample number
+            second: randomly sample boxes from the save db_infos
+            finally: check collisions between sampled boxes and existing boxes   
+        Args:
+            gt_boxes (np.array): the original boxes in current scene
+            gt_types (list(str)): the corresponding gt_types for the original gt_boxes
+
+        Returns:
+            sampled_boxes:
+            sampled_boxes_class_names:
+            
+        """
         avoid_coll_boxes = gt_boxes
 
         sampled = []
@@ -216,7 +231,7 @@ class PointAugmentor:
                     str(pathlib.Path(self.root_path) / info["path"]),
                     dtype=np.float32)
                 s_points = s_points.reshape([-1, 4])
-
+                # transform the normalized s_points into the absoluted coordinates
                 s_points[:, :3] += info["box3d_lidar"][:3]
                 s_points_list.append(s_points)
                 sampled_gt_types.append(info['name'])
