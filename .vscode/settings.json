@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        "**saved**": true,
+        "**/__pycache__/**":true
+    }
+}

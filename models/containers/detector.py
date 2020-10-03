@@ -21,9 +21,7 @@ class Detector(nn.Module):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
     
-
-
-    def forward(self,  data_dict):
+    def forward(self, data_dict, train=True):
         """forward process of detector 
             Args:
                 data_dict:{'gt_labels': [class]
@@ -39,3 +37,9 @@ class Detector(nn.Module):
                                 )
                         }   
         """
+        # if train:
+        data = self.rpn(data_dict)
+        if self.rfn is not None:
+            data = self.rfn(data_dict) 
+        return data
+        

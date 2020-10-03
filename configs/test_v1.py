@@ -11,6 +11,14 @@ model = dict(
                 output_shape=[40, 1600, 1408],
                 num_input_features=4,
                 num_hidden_features=64 * 4,
+                TDNet=dict{
+                    type="BiGNN",
+
+                },
+                BEVNet=dict{
+                    type='BEVNet',
+                }
+            
             ),
             bbox_head=dict(
                 type='SSDRotateHead',

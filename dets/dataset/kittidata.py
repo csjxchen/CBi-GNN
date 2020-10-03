@@ -282,7 +282,7 @@ class KittiLiDAR(Dataset):
             data['voxels'] = DC(to_tensor(voxels.astype(np.float32)))
             data['coordinates'] = DC(to_tensor(coordinates))
             data['num_points'] = DC(to_tensor(num_points))
-
+            
             if self.anchor_area_threshold >= 0 and self.anchors is not None :
                 dense_voxel_map = sparse_sum_for_anchors_mask(
                     coordinates, tuple(grid_size[::-1][1:]))
@@ -318,7 +318,7 @@ class KittiLiDAR(Dataset):
         for example in batch_list:
             for k, v in example.items():
                 example_merged[k].append(v)
-    
+
         ret = {}
         for key, elems in example_merged.items():
             if key in [

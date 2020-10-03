@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/test.py",
+            "cwd": "${workspaceFolder}/tools",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1"
+            },
+            "args": [
+                "../configs/test_vannecks_bignn_4x7_online.py",
+                "../saved_model_vehicle_Bi-GNN_online/checkpoint_epoch_50.pth",
+                "--save_to_file True",
+                "--test"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "train",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/test.py",
+            "cwd": "${workspaceFolder}/tools",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1"
+            },
+            "args": [
+                "../configs/test_vannecks_bignn_4x7_online.py",
+                "../saved_model_vehicle_Bi-GNN_online/checkpoint_epoch_50.pth",
+                "--save_to_file True",
+                "--test"
+            ],
+            "console": "integratedTerminal"
+        },
+    ]
+}
