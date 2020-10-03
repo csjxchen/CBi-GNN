@@ -378,7 +378,7 @@ class SSDRotateHead(nn.Module):
             if self._use_direction_classifier:
                 dir_labels = dir_labels[selected]
                 # print(dir_labels.dtype)
-                opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.byte()
+                opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.bool()
                 box_preds[opp_labels, -1] += np.pi
 
             # add ground-truth
@@ -429,7 +429,7 @@ class SSDRotateHead(nn.Module):
             if self._use_direction_classifier:
                 dir_labels = dir_labels[selected]
                 # print(dir_labels.dtype)
-                opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.byte()
+                opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.bool()
                 box_preds[opp_labels, -1] += np.pi
             
             bbox_pred = box_preds.view(-1, 7)
@@ -495,7 +495,7 @@ class SSDRotateHead(nn.Module):
             if self._use_direction_classifier:
                 dir_labels = dir_labels[selected]
                 # print(dir_labels.dtype)
-                opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.byte()
+                opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.bool()
                 box_preds[opp_labels, -1] += np.pi
             
             bbox_pred = box_preds.view(-1, 7)
