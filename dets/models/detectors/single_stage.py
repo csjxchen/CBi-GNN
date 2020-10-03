@@ -2,6 +2,8 @@ import numpy as np
 import torch.nn.functional as F
 import torch.nn as nn
 import torch
+from mmcv.parallel import DataContainer
+from torch import Tensor
 
 from dets.tools.ops.iou3d import iou3d_utils
 from mmdet.core import kitti_bbox2results
@@ -62,15 +64,19 @@ class SingleStageDetector(nn.Module):
     #         logger = logging.getLogger()
     #         load_checkpoint(self, pretrained, strict=False, logger=logger)
 
-    def merge_second_batch(self, batch_args):
+    def merge_second_batch(self, batch_args, device='cpu'):
         ret = {}
         for key, elems in batch_args.items():
+            if isinstance(elems, DataContainer):
+                elems = elems.data
+            if not isinstance(elems[0], Tensor):
+                elems = elems[0]
             if key in [
                 'voxels', 'num_points',
             ]:
                 # if key== 'voxels':
                 #     print(elems[0].shape)
-                ret[key] = torch.cat(elems, dim=0)
+                ret[key] = torch.cat(elems, dim=0).to(device)
             elif key == 'coordinates':
                 coors = []
                 for i, coor in enumerate(elems):
@@ -79,20 +85,27 @@ class SingleStageDetector(nn.Module):
                         mode='constant',
                         value=i)
                     coors.append(coor_pad)
-                ret[key] = torch.cat(coors, dim=0)
+                ret[key] = torch.cat(coors, dim=0).to(device)
             elif key in [
                 'img_meta', 'gt_labels', 'gt_bboxes',
             ]:
+                if elems and isinstance(elems[0], Tensor):
+                    elems = [e.to(device) for e in elems]
                 ret[key] = elems
             else:
-                ret[key] = torch.stack(elems, dim=0)
+                ret[key] = torch.stack(elems, dim=0).to(device)
         return ret
 
     def forward_train(self, img, img_meta, **kwargs):
 
         batch_size = len(img_meta)
 
-        ret = self.merge_second_batch(kwargs)
+        ret = self.merge_second_batch(kwargs, device=img.device)
+
+        # ret = {
+        #     k: ret[k].to(img.device)
+        #     for k in ret.keys()
+        # }
 
         vx = self.backbone(ret['voxels'], ret['num_points'])
 
