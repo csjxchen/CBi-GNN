@@ -7,7 +7,7 @@ from models import interface
 class CBIGNN(RPN):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
         super(CBIGNN, self).__init__(model_cfg, train_cfg, test_cfg, is_train=True)    
-        
+        self.init_architecture()
 
     def init_architecture(self):
         # initialize backbone

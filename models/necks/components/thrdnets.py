@@ -10,79 +10,13 @@ import torch.nn.functional as F
 from functools import partial
 from dets.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 
-def structured_forward(lrx, hrx, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset, cat_original=True):
-    lr_indices = lrx.indices.float()
-    hr_indices = hrx.indices.float()
-    lr_voxel_size = torch.Tensor(lr_voxel_size).to(lr_indices.device)
-    hr_voxel_size = torch.Tensor(hr_voxel_size).to(hr_indices.device)
-    
-    offset = torch.Tensor(offset).to(hr_indices.device)
-    lr_indices[:, 1:] = lr_indices[:, [3, 2, 1]] * lr_voxel_size + \
-                    offset + .5 * lr_voxel_size
-    
-    hr_indices[:, 1:] = hr_indices[:, [3, 2, 1]] * hr_voxel_size + \
-                    offset + .5 * hr_voxel_size
-    hr_features = hrx.features
-    lr_features = lrx.features
-    
-    new_lr_features = []
-    features = []
-    for bidx in range(batch_size):
-        lr_mask = lr_indices[:, 0] == bidx
-        hr_mask = hr_indices[:, 0] == bidx
-        cur_lr_indices = lr_indices[lr_mask]
-        cur_hr_indices = hr_indices[hr_mask]
-        # print(f"{lr_voxel_size}, {cur_lr_indices.shape[0]}, {hr_voxel_size}, {cur_hr_indices.shape[0]}")
-        cur_lr_features = lr_features[lr_mask].unsqueeze(0).transpose(1, 2)
-        cur_hr_features = hr_features[hr_mask].unsqueeze(0).transpose(1, 2)
 
-        cur_lr_xyz = cur_lr_indices[:, 1:].unsqueeze(0)
-        cur_hr_xyz = cur_hr_indices[:, 1:].unsqueeze(0)
-        _, new_features = grouper(cur_hr_xyz.contiguous(), cur_lr_xyz.contiguous(), \
-            cur_hr_features.contiguous(), cur_lr_features.contiguous())
-        
-        new_lr_features.append(new_features.squeeze(0))
-
-    new_lr_features = torch.cat(new_lr_features, dim=1)
-    # print(new_lr_features.shape)
-    new_lr_features = new_lr_features.transpose(0, 1)
-    
-    # print(lr_features.mean(dim=0), new_lr_features.mean(dim=0))
-    features = torch.cat([lr_features, new_lr_features], dim=-1)
-    return features
-
-def post_act_block(in_channels, out_channels, kernel_size, indice_key, stride=1, padding=0,
-                    conv_type='subm', norm_fn=None):
-    if conv_type == 'subm':
-        m = spconv.SparseSequential(
-            spconv.SubMConv3d(in_channels, out_channels, kernel_size, bias=False, indice_key=indice_key),
-            norm_fn(out_channels),
-            nn.ReLU(),
-        )
-    elif conv_type == 'spconv':
-        m = spconv.SparseSequential(
-            spconv.SparseConv3d(in_channels, out_channels, 
-                            kernel_size, stride=stride, padding=padding,
-                            bias=False, indice_key=indice_key),
-            norm_fn(out_channels),
-            nn.ReLU(),
-        )
-    elif conv_type == 'inverseconv':
-        m = spconv.SparseSequential(
-            spconv.SparseInverseConv3d(in_channels, out_channels, kernel_size,
-                                        indice_key=indice_key, bias=False),
-            norm_fn(out_channels),
-            nn.ReLU(),
-        )
-    else:
-        raise NotImplementedError
-    return m
 
 class BiGNN(nn.Module):
     def __init__(self, **kwargs):
         super(BiGNN, self).__init__()
         norm_fn = partial(nn.BatchNorm1d, eps=1e-3, momentum=0.01)
-        self.use_voxel_feature = use_voxel_feature
+        # self.use_voxel_feature = use_voxel_feature
         
         self.conv_input = spconv.SparseSequential(
             spconv.SubMConv3d(num_input_features, 16, 3, padding=1, bias=False, indice_key='subm1'),
@@ -93,7 +27,7 @@ class BiGNN(nn.Module):
         self.conv1 = spconv.SparseSequential(
             block(16, 32, 3, norm_fn=norm_fn, padding=1, indice_key='subm1'),
         )
-        
+        -
         self.grouper_conv14 = Grouper7(radius=[1.0],
                                     nsamples=[64],
                                     mlps=[[32, 32]],
@@ -101,7 +35,7 @@ class BiGNN(nn.Module):
                                     query_ch=32,
                                     neigh_ch=32,
                                     bn=False)
-        
+
         # 64 + 32
         self.conv14_structured_forward = partial(structured_forward,  grouper=self.grouper_conv14, 
                                     lr_voxel_size=[0.4, 0.4, 1.0], hr_voxel_size=[0.05, 0.05, 0.1], offset=(0., -40., -3.))
@@ -166,8 +100,6 @@ class BiGNN(nn.Module):
             norm_fn(64),
             nn.ReLU(),
         )
-      
-
 
 class BiGNN_V1(nn.Module):
     def __init__(self, num_input_features, use_voxel_feature=False):

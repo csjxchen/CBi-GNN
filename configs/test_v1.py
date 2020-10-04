@@ -11,14 +11,83 @@ model = dict(
                 output_shape=[40, 1600, 1408],
                 num_input_features=4,
                 num_hidden_features=64 * 4,
-                TDNet=dict{
+                ThrDNet=dict(
                     type="BiGNN",
-
-                },
-                BEVNet=dict{
-                    type='BEVNet',
-                }
-            
+                    conv_inputs=[4, 16],
+                    downsample_layers=[[16, 32], 
+                                    [32, 32, 32],
+                                    [32, 32, 64],
+                                    [64, 64, 64]],
+                    goupers=[
+                            dict(
+                                type='GrouperDisAttention',
+                                forward_type='v1',
+                                args=dict(
+                                    radius=1.0,
+                                    nsamples=128,
+                                    mlps=[16, 32],
+                                    use_xyz=True,
+                                    bn=False,
+                                    instance_norm=False
+                                    ),
+                                maps=dict(
+                                    lr_index=3,
+                                    hr_index=0,
+                                    lr_voxel_size=[0.4, 0.4, 1.0],   
+                                    hr_voxel_size=[0.05, 0.05, 0.1]
+                                    ),
+                            ),
+                            dict(
+                                type='GrouperDisAttention',
+                                forward_type='v1',
+                                args=dict(
+                                    radius=1.0,
+                                    nsamples=32,
+                                    mlps=[32, 32],
+                                    use_xyz=True,
+                                    bn=False,
+                                    instance_norm=False
+                                    ),
+                                maps=dict(
+                                    lr_index=3,
+                                    hr_index=1,
+                                    lr_voxel_size=[0.4, 0.4, 1.0],   
+                                    hr_voxel_size=[0.1, 0.1, 0.2]
+                                    ),
+                            ),
+                            dict(
+                                grouper_type='GrouperDisAttention',
+                                forward_type='v1',
+                                args=dict(
+                                    radius=1.0,
+                                    nsamples=16,
+                                    mlps=[64, 32],
+                                    use_xyz=True,
+                                    bn=False,
+                                    instance_norm=False
+                                    ),
+                                maps=dict(
+                                    lr_index=3,
+                                    hr_index=2,
+                                    lr_voxel_size=[0.4, 0.4, 1.0],   
+                                    hr_voxel_size=[0.2, 0.2, 0.4]
+                                    ),
+                            ),  
+                        ],
+                TwoDNet=dict(
+                    type='PCDetBEVNet2',
+                    args=dict(
+                        in_features=256,
+                        num_filters=256
+                        concat_input=False, 
+                        num_input_features=256,
+                        layer_nums=[5, 5],
+                        layer_strides=[1, 2],
+                        num_filters=[128, 256],
+                        upsample_strides=[1, 2],
+                        num_upsample_filters = [256, 256],
+                    )
+                )
             ),
             bbox_head=dict(
                 type='SSDRotateHead',

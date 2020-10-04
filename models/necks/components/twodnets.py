@@ -1,6 +1,7 @@
 import torch.nn as nn
 from functools import partial
 
+__all__ = ['BEVNet', 'PCDetBEVNet']
 class BEVNet(nn.Module):
     def __init__(self, in_features, num_filters=256):
         super(BEVNet, self).__init__()
@@ -52,3 +53,86 @@ class BEVNet(nn.Module):
         x = self.conv7(x)
         x = F.relu(self.bn7(x), inplace=True)
         return x, conv6
+    
+class PCDetBEVNet(nn.Module):
+    def __init__(self, in_features, num_filters=256, **args):
+        super().__init__()
+        self._concat_input = args['concat_input']
+        assert len(args['layer_strides']) == len(args['layer_nums'])
+        assert len(args['num_filters']) == len(args['layer_nums'])
+        assert len(args['num_upsample_filters']) == len(args['layer_nums'])
+        
+        # if args['use_norm']:
+        BatchNorm2d = partial(nn.BatchNorm2d, eps=1e-3, momentum=0.01)
+        Conv2d = partial(nn.Conv2d, bias=False)
+        ConvTranspose2d = partial(nn.ConvTranspose2d, bias=False)
+
+        in_filters = [args['num_input_features'], *args['num_filters'][:-1]]
+        blocks = []
+        deblocks = []
+
+        for i, layer_num in enumerate(args['layer_nums']):
+            block = Sequential(
+                nn.ZeroPad2d(1),
+                Conv2d(in_filters[i], args['num_filters'][i], 3, stride=args['layer_strides'][i]),
+                BatchNorm2d(args['num_filters'][i]),
+                nn.ReLU(),
+            )
+            for j in range(layer_num):
+                block.add(Conv2d(args['num_filters'][i], args['num_filters'][i], 3, padding=1))
+                block.add(BatchNorm2d(args['num_filters'][i]))
+                block.add(nn.ReLU())
+            blocks.append(block)
+            deblock = Sequential(
+                ConvTranspose2d(
+                    args['num_filters'][i], args['num_upsample_filters'][i], args['upsample_strides'][i],
+                    stride=args['upsample_strides'][i]
+                ),
+                BatchNorm2d(args['num_upsample_filters'][i]),
+                nn.ReLU(),
+            )
+            deblocks.append(deblock)
+
+        c_in = sum(args['num_upsample_filters'])
+        if self._concat_input:
+            c_in += args['num_input_features']
+
+        if len(args['upsample_strides']) > len(args['num_filters']):
+            deblock = Sequential(
+                ConvTranspose2d(c_in, c_in, args['upsample_strides'][-1], stride=args['upsample_strides'][-1]),
+                BatchNorm2d(c_in),
+                nn.ReLU(),
+            )
+            deblocks.append(deblock)
+        self.blocks = nn.ModuleList(blocks)
+        self.deblocks = nn.ModuleList(deblocks)
+        
+        self.conv_out = Sequential(
+                # nn.ZeroPad2d(1),
+                Conv2d(c_in, num_filters, 1),
+                BatchNorm2d(num_filters),
+                nn.ReLU(),
+            )
+        
+    def forward(self, x_in):
+        ups = []
+        x = x_in
+        for i in range(len(self.blocks)):
+            x = self.blocks[i](x)
+            ups.append(self.deblocks[i](x))
+
+        if self._concat_input:
+            ups.append(x_in)
+
+        if len(ups) > 1:
+            x = torch.cat(ups, dim=1)
+        else:
+            x = ups[0]
+        
+        if len(self.deblocks)>len(self.blocks):
+            x = self.deblocks[-1](x)        
+        
+        conv_ps = ups[0].clone()
+
+        x = self.conv_out(x)
+        return x, conv_ps 
