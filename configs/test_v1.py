@@ -35,8 +35,7 @@ model = dict(
                                     hr_index=0,
                                     lr_voxel_size=[0.4, 0.4, 1.0],   
                                     hr_voxel_size=[0.05, 0.05, 0.1]
-                                    ),
-                            ),
+                                    )),
                             dict(
                                 type='GrouperDisAttention',
                                 forward_type='v1',
@@ -53,8 +52,7 @@ model = dict(
                                     hr_index=1,
                                     lr_voxel_size=[0.4, 0.4, 1.0],   
                                     hr_voxel_size=[0.1, 0.1, 0.2]
-                                    ),
-                            ),
+                                    )),
                             dict(
                                 grouper_type='GrouperDisAttention',
                                 forward_type='v1',
@@ -71,8 +69,7 @@ model = dict(
                                     hr_index=2,
                                     lr_voxel_size=[0.4, 0.4, 1.0],   
                                     hr_voxel_size=[0.2, 0.2, 0.4]
-                                    ),
-                            ),  
+                                    )),  
                         ],
                 TwoDNet=dict(
                     type='PCDetBEVNet2',

@@ -20,6 +20,7 @@ class CBIGNN(RPN):
         
         # initialize neck
         neck_dict = self.model_cfg['neck'].copy() if 'neck' in self.model_cfg.keys() else None
+        
         if neck_dict:
             neck_type = neck_dict.pop('type') 
             self.neck = interface[neck_type][*neck_dict*]
@@ -27,11 +28,13 @@ class CBIGNN(RPN):
             self.neck = None
         
         
+
+
         # initialize head
         rpn_head_dict = self.model_cfg.bbox_head.copy() if "bbox_head" in self.model_cfg.keys() else None
         if rpn_head_dict:
             rpn_head_type = rpn_head_dict.pop('type')
-            self.rpn_head = 
+            # self.rpn_head = 
         
         pass
     # def forward(self, data)

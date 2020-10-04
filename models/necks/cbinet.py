@@ -28,7 +28,7 @@ class CBiNet(nn.Module):
         _twodnet_args = TwoDNet_cfg.copy()
         _twodnet_type = _twodnet_args.pop('type')
         self.Twodnet = components[_twodnet_type](_twodnet_args)
-    
+        
     def forward(self, data):
         # ! TODO
         pass

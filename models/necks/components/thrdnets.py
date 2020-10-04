@@ -10,8 +10,6 @@ import torch.nn.functional as F
 from functools import partial
 from dets.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 
-
-
 class BiGNN(nn.Module):
     def __init__(self, **kwargs):
         super(BiGNN, self).__init__()
@@ -204,22 +202,25 @@ class BiGNN_V1(nn.Module):
         :return:
         """
         # str_fn = lambda x, n: "%s in backbone8x is %s" % (n , str(x.spatial_shape))
-
+        rx_list = []
         x = self.conv_input(x)
 
         x_conv1 = self.conv1(x)
-
+        rx_list.append(x_conv1)
+        
         x_conv2 = self.conv2(x_conv1)
+        rx_list.append(x_conv2)
+        
         if self.use_voxel_feature:
             out_dict = {'vf2': x_conv2}
 
-
         x_conv3 = self.conv3(x_conv2)
+        rx_list.append(x_conv3)
 
         x_conv4 = self.conv4(x_conv3)
+        rx_list.append(x_conv4)
 
-
-        structured_feats14 = self.conv14_structured_forward(lrx=x_conv4, hrx=x_conv1, batch_size=kwargs['batch_size'])
+        structured_feats14 = self.conv14_structured_forward(rx_list, batch_size=kwargs['batch_size'])
 
         structured_feats24 = self.conv24_structured_forward(lrx=x_conv4, hrx=x_conv2, batch_size=kwargs['batch_size'])
 
