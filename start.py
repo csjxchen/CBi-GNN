@@ -4,12 +4,14 @@ import torch
 from mmcv import Config
 from pytorch_lightning import seed_everything, Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, CSVLogger
 
 from dets.models.network_pl import Cbi_gnn
 
 from numba import NumbaWarning
 import warnings
+
+
 warnings.filterwarnings("ignore", category=NumbaWarning)
 
 def arg_parser():
@@ -51,7 +53,8 @@ def arg_parser():
 
 def do_train(args, cfg):
     seed_everything(args.seed)
-    logger = TensorBoardLogger(save_dir=cfg.work_dir, name='CBi-GNN_logs')
+    logger = [TensorBoardLogger(save_dir=cfg.work_dir, name='CBi-GNN_logs'),
+              CSVLogger(save_dir=cfg.work_dir, name='CBi-GNN_logs')]
 
     ckpt_callback = ModelCheckpoint(
         filepath=args.work_dir,  # Modified here to change dir for checkpoint.
@@ -71,6 +74,7 @@ def do_train(args, cfg):
         fast_dev_run=args.fast_dev_run,
         terminate_on_nan=True,
         distributed_backend=args.distributed_backend,
+        sync_batchnorm=True
         # distributed_backend='dp'
     )
     train_dataloader = cbi_gnn.train_dataloader()

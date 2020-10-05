@@ -112,10 +112,15 @@ class Cbi_gnn(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         losses = self(batch)
         loss, log_vars = parse_losses(losses)
-        self.logger.log(loss)
+        # self.logger.log(loss)
         result = pl.TrainResult(minimize=loss)
         # TODO: Anything to log?
-        result.log_dict(log_vars)
+        # result.log_dict(log_vars, logger=True, prog_bar=True)
+        for k, v in log_vars.items():
+            result.log(k, v, logger=True)
+        # result.log("loss_my", loss, prog_bar=True)
+        # for k, v in log_vars.items():
+        #     self.log(k, v, on_step=True, on_epoch=True, prog_bar=False, logger=True)
         return result
 
     def test_step(self, batch, batch_idx) -> EvalResult:
