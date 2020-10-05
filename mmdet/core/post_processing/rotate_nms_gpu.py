@@ -88,12 +88,12 @@ def nms_kernel(n_boxes, nms_overlap_thresh, dev_boxes, dev_mask):
         dev_mask[cur_box_idx * col_blocks + col_start] = t
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def div_up(m, n):
     return m // n + (m % n > 0)
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def nms_postprocess(keep_out, mask_host, boxes_num):
     threadsPerBlock = 8 * 8
     col_blocks = div_up(boxes_num, threadsPerBlock)
