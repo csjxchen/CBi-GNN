@@ -8,6 +8,7 @@ from mmcv.parallel import collate
 from pytorch_lightning import EvalResult
 from torch import optim, nn
 from torch.optim import Optimizer
+from torch.optim.lr_scheduler import OneCycleLR
 from torch.utils.data import DataLoader
 
 from dets.dataset.dataset_factory import get_dataset
@@ -36,6 +37,7 @@ class Cbi_gnn(pl.LightningModule):
     def __init__(self, config):
         super(Cbi_gnn, self).__init__()
         self.cfg = config
+        self.hparams = config._cfg_dict.to_dict()
         train_cfg, test_cfg = config.train_cfg, config.test_cfg
         self.detectors = SingleStageDetector(train_cfg=train_cfg, test_cfg=test_cfg, **config.model)
         self.optim_cfg = config.optimizer
@@ -51,7 +53,8 @@ class Cbi_gnn(pl.LightningModule):
         optim_cfg = self.optim_cfg
 
         if optim_cfg.type == 'adam':
-            optimizer = optim.Adam(self.parameters(), lr=optim_cfg.lr, weight_decay=optim_cfg.weight_decay)
+            optimizer = optim.Adam(self.parameters(), betas=(0.9, 0.99), lr=optim_cfg.lr,
+                                   weight_decay=optim_cfg.weight_decay)
         elif optim_cfg.type == 'sgd':
             optimizer = optim.SGD(
                 self.parameters(), lr=optim_cfg.lr, weight_decay=optim_cfg.weight_decay,
@@ -82,8 +85,9 @@ class Cbi_gnn(pl.LightningModule):
 
     def train_dataloader(self) -> DataLoader:
         kitti_dataset = get_dataset(self.cfg.data.train)
-        batch_size = self.cfg.data.imgs_per_gpu * self.cfg.gpu_count
-        num_workers = self.cfg.data.workers_per_gpu * self.cfg.gpu_count
+        batch_size = self.cfg.data.imgs_per_gpu
+        # batch_size = 1
+        num_workers = self.cfg.data.workers_per_gpu
         dataloader = DataLoader(
             dataset=kitti_dataset,
             batch_size=batch_size,
@@ -108,6 +112,7 @@ class Cbi_gnn(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         losses = self(batch)
         loss, log_vars = parse_losses(losses)
+        self.logger.log(loss)
         result = pl.TrainResult(minimize=loss)
         # TODO: Anything to log?
         result.log_dict(log_vars)
@@ -158,6 +163,12 @@ class Cbi_gnn(pl.LightningModule):
         total_steps = total_iters_each_epoch * total_epochs
 
         if lr_cfg.policy == 'onecycle':
+            lr_scheduler = OneCycleLR(
+                optimizer, epochs=total_epochs, steps_per_epoch=total_iters_each_epoch,
+                max_lr=optim_cfg.lr, base_momentum=min(lr_cfg.moms), max_momentum=max(lr_cfg.moms),
+                div_factor=lr_cfg.div_factor, pct_start=lr_cfg.pct_start
+            )
+        elif lr_cfg.policy == 'onecycle_my':
             lr_scheduler = OneCycle(
                 optimizer, total_steps, optim_cfg.lr, list(lr_cfg.moms), lr_cfg.div_factor, lr_cfg.pct_start
             )

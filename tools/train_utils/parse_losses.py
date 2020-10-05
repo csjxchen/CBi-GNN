@@ -17,7 +17,7 @@ def parse_losses(losses):
     loss = sum(_value for _key, _value in log_vars.items() if 'loss' in _key)
 
     log_vars['loss'] = loss
-    for name in log_vars:
-        log_vars[name] = log_vars[name].item()
+    # for name in log_vars:
+    #     log_vars[name] = log_vars[name].item()
 
     return loss, log_vars

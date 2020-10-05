@@ -6,7 +6,7 @@ model = dict(
         use_norm=True,
         num_filters=[32, 64],
         with_distance=False),
-    
+
     neck=dict(
         type='CBiGNN',
         output_shape=[40, 1600, 1408],
@@ -25,7 +25,7 @@ model = dict(
     ),
     extra_head=dict(
         type='PartInteractWarp3',
-        grid_offsets = (0., 40.),
+        grid_offsets=(0., 40.),
         featmap_stride=.4,
         in_channels=256,
         num_class=1,
@@ -39,9 +39,9 @@ train_cfg = dict(
         assigner=dict(
             pos_iou_thr=0.6,
             neg_iou_thr=0.45,
-            min_pos_iou=0.45, # this one is to limit the force assignment
+            min_pos_iou=0.45,  # this one is to limit the force assignment
             ignore_iof_thr=-1,
-            similarity_fn ='NearestIouSimilarity'
+            similarity_fn='NearestIouSimilarity'
         ),
         nms=dict(
             nms_across_levels=False,
@@ -61,7 +61,7 @@ train_cfg = dict(
             neg_iou_thr=0.7,
             min_pos_iou=0.7,
             ignore_iof_thr=-1,
-            similarity_fn ='RotateIou3dSimilarity'
+            similarity_fn='RotateIou3dSimilarity'
         )
     )
 )
@@ -79,12 +79,12 @@ test_cfg = dict(
 )
 # dataset settings
 dataset_type = 'KittiLiDAR'
-data_root = '/cjx/research/PointRCNN/data/KITTI/object/'
+data_root = '/chenjiaxin/research/PointRCNN/data/KITTI/object/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 data = dict(
-    imgs_per_gpu=1,
-    workers_per_gpu=4,
+    imgs_per_gpu=2,
+    workers_per_gpu=12,
     train=dict(
         type=dataset_type,
         root=data_root + 'training/',
@@ -97,7 +97,7 @@ data = dict(
         with_mask=True,
         with_label=True,
         with_point=True,
-        class_names = ['Car', 'Van'],
+        class_names=['Car', 'Van'],
         augmentor=dict(
             type='PointAugmentor',
             root_path=data_root,
@@ -141,7 +141,7 @@ data = dict(
         with_mask=True,
         with_label=False,
         with_point=True,
-        class_names = ['Car'],
+        class_names=['Car'],
         generator=dict(
             type='VoxelGenerator',
             voxel_size=[0.05, 0.05, 0.1],
@@ -162,15 +162,16 @@ data = dict(
 )
 # optimizer
 optimizer = dict(
-    type='adam_onecycle', lr=0.01, weight_decay=0.001,
+    type='adam', lr=0.01, weight_decay=0.001,
+    # type='adam_onecycle', lr=0.01, weight_decay=0.001,
     grad_clip=dict(max_norm=10, norm_type=2)
 )
 # learning policy
 lr_config = dict(
     policy='onecycle',
-    moms = [0.95, 0.85],
-    div_factor = 10,
-    pct_start = 0.4
+    moms=[0.95, 0.85],
+    div_factor=10,
+    pct_start=0.4
 )
 checkpoint_config = dict(interval=2)
 log_config = dict(interval=50)
@@ -178,7 +179,8 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = '../exps/saved_model_vehicle_Bi-GNN_online_forybl'
+work_dir = './output/log/saved_model_vehicle_Bi-GNN_online_forybl'
+# work_dir = '../exps/saved_model_vehicle_Bi-GNN_online_forybl'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

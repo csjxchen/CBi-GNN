@@ -8,7 +8,7 @@ import torch
 # from mmdet.core import tensor2points
 # import torch.nn.functional as F
 from functools import partial
-from dets.tools.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
+from mmdet.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 
 
 def structured_forward(lrx, hrx, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset, cat_original=True):

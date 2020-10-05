@@ -7,18 +7,18 @@ from torch.utils.data import Dataset
 from mmcv.runner import obj_from_dict
 from mmdet.datasets.transforms import (ImageTransform, BboxTransform)
 from mmdet.datasets.utils import to_tensor, random_scale
-from dets.tools.bbox3d import bbox3d_target
-from dets.tools.anchor import anchor3d_generator
-from dets.tools.point_cloud import voxel_generator
-from dets.tools.point_cloud import point_augmentor
-from dets.tools.utils.kitti_utils import read_label, read_lidar, \
+from mmdet.core.bbox3d import bbox3d_target
+from mmdet.core.anchor import anchor3d_generator
+from mmdet.core.point_cloud import voxel_generator
+from mmdet.core.point_cloud import point_augmentor
+from mmdet.datasets.kitti_utils import read_label, read_lidar, \
     project_rect_to_velo, Calibration, get_lidar_in_image_fov, \
     project_rect_to_image, project_rect_to_right, load_proposals
-from dets.tools.bbox3d.geometry import rbbox2d_to_near_bbox, filter_gt_box_outside_range, \
+from mmdet.core.bbox3d.geometry import rbbox2d_to_near_bbox, filter_gt_box_outside_range, \
     sparse_sum_for_anchors_mask, fused_get_anchors_area, limit_period, center_to_corner_box3d, points_in_rbbox
 import os
-from dets.tools.point_cloud.voxel_generator import VoxelGenerator
-from dets.tools.ops.points_op import points_op_cpu
+from mmdet.core.point_cloud.voxel_generator import VoxelGenerator
+from mmdet.ops.points_op import points_op_cpu
 
 
 class KittiLiDAR(Dataset):

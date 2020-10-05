@@ -5,7 +5,7 @@ import torch
 from mmcv.parallel import DataContainer
 from torch import Tensor
 
-from dets.tools.ops.iou3d import iou3d_utils
+from mmdet.ops.iou3d import iou3d_utils
 from mmdet.core import kitti_bbox2results
 
 from .. import builder
@@ -65,6 +65,7 @@ class SingleStageDetector(nn.Module):
     #         load_checkpoint(self, pretrained, strict=False, logger=logger)
 
     def merge_second_batch(self, batch_args, device='cpu'):
+
         ret = {}
         for key, elems in batch_args.items():
             if isinstance(elems, DataContainer):
@@ -98,7 +99,24 @@ class SingleStageDetector(nn.Module):
 
     def forward_train(self, img, img_meta, **kwargs):
 
-        batch_size = len(img_meta)
+        """
+        anchors:torch.Size([2, 70400, 7])
+        voxels:torch.Size([40587, 4])
+        coordinates:torch.Size([40587, 4])
+        num_points:torch.Size([41673])
+        anchors_mask:torch.Size([2, 70400])
+        gt_labels:2
+        gt_bboxes:2
+
+        Args:
+            img:
+            img_meta:
+            **kwargs:
+
+        Returns:
+
+        """
+        batch_size = img.shape[0]
 
         ret = self.merge_second_batch(kwargs, device=img.device)
 

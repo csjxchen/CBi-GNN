@@ -8,6 +8,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from dets.models.network_pl import Cbi_gnn
 
+from numba import NumbaWarning
+import warnings
+warnings.filterwarnings("ignore", category=NumbaWarning)
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -66,7 +69,9 @@ def do_train(args, cfg):
         max_epochs=cfg.total_epochs,
         gpus=args.gpus,
         fast_dev_run=args.fast_dev_run,
-        distributed_backend=args.distributed_backend
+        terminate_on_nan=True,
+        distributed_backend=args.distributed_backend,
+        # distributed_backend='dp'
     )
     train_dataloader = cbi_gnn.train_dataloader()
     trainer.fit(

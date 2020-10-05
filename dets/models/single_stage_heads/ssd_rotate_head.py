@@ -1,8 +1,8 @@
 import torch.nn as nn
 import numpy as np
 from dets.models.utils import one_hot
-from dets.tools.ops.iou3d import iou3d_utils
-from dets.tools.ops.iou3d.iou3d_utils import boxes3d_to_bev_torch, boxes_iou_bev
+from mmdet.ops.iou3d import iou3d_utils
+from mmdet.ops.iou3d.iou3d_utils import boxes3d_to_bev_torch, boxes_iou_bev
 import torch
 import torch.nn.functional as F
 from mmdet.core.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss, weighted_cross_entropy

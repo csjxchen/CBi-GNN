@@ -3,8 +3,8 @@ import copy
 from mmcv.runner import obj_from_dict
 
 import dets.dataset.kittidata as kittidata
-from dets.tools.anchor import anchor3d_generator
-from dets.tools.point_cloud import point_augmentor, voxel_generator
+from mmdet.core.anchor import anchor3d_generator
+from mmdet.core.point_cloud import point_augmentor, voxel_generator
 from mmdet.core.bbox3d import bbox3d_target  # TODO: change to our version bbox3d_target
 
 
