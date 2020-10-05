@@ -14,10 +14,11 @@ model = dict(
                 ThrDNet=dict(
                     type="BiGNN",
                     conv_inputs=[4, 16],
-                    downsample_layers=[[16, 32], 
-                                    [32, 32, 32],
-                                    [32, 32, 64],
-                                    [64, 64, 64]],
+                    downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'], 'filters': [16, 32]},
+                                {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'filters': [32, 32, 32]}, 
+                                {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'filters': [32, 32, 64]}, 
+                                {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'filters': [64, 64, 32]}, 
+                                ],
                     goupers=[
                             dict(
                                 type='GrouperDisAttention',
@@ -33,8 +34,9 @@ model = dict(
                                 maps=dict(
                                     lr_index=3,
                                     hr_index=0,
-                                    lr_voxel_size=[0.4, 0.4, 1.0],   
-                                    hr_voxel_size=[0.05, 0.05, 0.1]
+                                    lr_voxel_size=(0.4, 0.4, 1.0]),   
+                                    hr_voxel_size=(0.05, 0.05, 0.1),
+                                    offset=(0., -40., -3.)
                                     )),
                             dict(
                                 type='GrouperDisAttention',
@@ -50,8 +52,9 @@ model = dict(
                                 maps=dict(
                                     lr_index=3,
                                     hr_index=1,
-                                    lr_voxel_size=[0.4, 0.4, 1.0],   
-                                    hr_voxel_size=[0.1, 0.1, 0.2]
+                                    lr_voxel_size=(0.4, 0.4, 1.0),   
+                                    hr_voxel_size=(0.1, 0.1, 0.2),
+                                    offset=(0., -40., -3.)
                                     )),
                             dict(
                                 grouper_type='GrouperDisAttention',
@@ -67,10 +70,11 @@ model = dict(
                                 maps=dict(
                                     lr_index=3,
                                     hr_index=2,
-                                    lr_voxel_size=[0.4, 0.4, 1.0],   
-                                    hr_voxel_size=[0.2, 0.2, 0.4]
+                                    lr_voxel_size=(0.4, 0.4, 1.0),   
+                                    hr_voxel_size=(0.2, 0.2, 0.4),
+                                    offset=(0., -40., -3.)
                                     )),  
-                        ],
+                            ],
                 TwoDNet=dict(
                     type='PCDetBEVNet2',
                     args=dict(
