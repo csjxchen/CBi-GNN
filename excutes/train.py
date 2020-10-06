@@ -66,6 +66,6 @@ def main():
     
     model = Detector(config.model, config.train_cfg, config.test_cfg)
     dataset = build_dataset(config.data.train)
-
+    
 if __name__ == "__main__":
     main()

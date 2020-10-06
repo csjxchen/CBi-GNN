@@ -51,8 +51,6 @@ def bbox_flip(bboxes, img_shape):
     flipped[..., 0::4] = w - bboxes[..., 2::4] - 1
     flipped[..., 2::4] = w - bboxes[..., 0::4] - 1
     return flipped
-
-
 class BboxTransform(object):
     """Preprocess gt bboxes.
 
@@ -78,7 +76,6 @@ class BboxTransform(object):
             padded_bboxes[:num_gts, :] = gt_bboxes
             return padded_bboxes
 
-
 class MaskTransform(object):
     """Preprocess masks.
 
@@ -99,7 +96,6 @@ class MaskTransform(object):
         ]
         padded_masks = np.stack(padded_masks, axis=0)
         return padded_masks
-
 
 class Numpy2Tensor(object):
 

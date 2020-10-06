@@ -6,7 +6,7 @@ from mmcv.parallel import DataContainer as DC
 import torch
 from torch.utils.data import Dataset
 from mmcv.runner import obj_from_dict
-from dets.datasets.transforms import (ImageTransform, BboxTransform)
+from dets.tools.utils.transforms import (ImageTransform, BboxTransform)
 from dets.datasets.utils import to_tensor, random_scale
 from dets.tools.bbox3d import bbox3d_target
 from dets.tools.anchor import anchor3d_generator
@@ -351,5 +351,5 @@ class ImageManager(object):
     
     def __call__(self, sample_id, scale, flip=False):
         img = mmcv.imread(osp.join(self.path, '%06d.png' % sample_id))
-        img, img_shape, pad_shape, scale_factor = self.transformer(img, scale=1, False)
+        img, img_shape, pad_shape, scale_factor = self.transformer(img, scale=1.0, flip=False)
         return img, img_shape, pad_shape, scale_factor
