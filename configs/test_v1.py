@@ -74,7 +74,7 @@ model = dict(
                                     hr_voxel_size=(0.2, 0.2, 0.4),
                                     offset=(0., -40., -3.)
                                     )),  
-                            ],
+                            ]),
                 TwoDNet=dict(
                     type='PCDetBEVNet2',
                     args=dict(
@@ -92,22 +92,26 @@ model = dict(
             ),
             bbox_head=dict(
                 type='SSDRotateHead',
-                num_class=1,
-                num_output_filters=256,
-                num_anchor_per_loc=2,
-                use_sigmoid_cls=True,
-                encode_rad_error_by_sin=True,
-                use_direction_classifier=True,
-                box_code_size=7,
-            ),
-            extra_head=dict(
-                type='PartInteractWarp3',
-                grid_offsets = (0., 40.),
-                featmap_stride=.4,
-                in_channels=256,
-                num_class=1,
-                num_parts=28,
-            )
+                args=dict(
+                    num_class=1,
+                    num_output_filters=256,
+                    num_anchor_per_loc=2,
+                    use_sigmoid_cls=True,
+                    encode_rad_error_by_sin=True,
+                    use_direction_classifier=True,
+                    box_code_size=7,
+                    alignment_head=dict(
+                        type='NonlocalPart',
+                        args=dict(
+                            grid_offsets = (0., 40.),
+                            featmap_stride=.4,
+                            in_channels=256,
+                            num_class=1,
+                            num_parts=28)
+                            )
+                    ),
+                ),
+
         )
 
 )
@@ -133,7 +137,7 @@ train_cfg = dict(
         pos_weight=-1,
         smoothl1_beta=1 / 9.0,
         debug=False),
-    extra=dict(
+    alignment=dict(
         weight=1.0,
         assigner=dict(
             pos_iou_thr=0.7,
@@ -153,7 +157,7 @@ test_cfg = dict(
         nms_thr=0.7,
         min_bbox_size=0
     ),
-    extra=dict(
+    alignment=dict(
         score_thr=0.3, nms=dict(type='nms', iou_thr=0.1), max_per_img=100)
 )
 # dataset settings

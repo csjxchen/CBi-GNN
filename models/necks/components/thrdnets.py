@@ -25,22 +25,22 @@ class BiGNN(nn.Module):
         )
         block = post_act_block
         
-
         self.downsample_layers = nn.ModuleList()
         for layer_dict in self.model_cfg.downsample_layers: 
             # for l in layers:
             assert len(layer_dict['types']) == len(layer_dict['indice_keys']), f"{len(layer_dict['types'])} == {len(layer_dict['indice_keys'])}?"
             assert len(layer_dict['types']) == (len(layer_dict['filters'])-1), f"{len(layer_dict['types'])} == {len(layer_dict['filters'])-1}?"
             _sequentials = []
+            
             for i in range(len(layer_dict['types'])):
                 _sequentials.append(block(layer_dict['filters'][i], 
-                                        layer_dict['filters'][i + 1], 3, 
-                                        norm_fn=norm_fn, padding=1, 
-                                        conv_type=layer_dict['types'][i],
-                                        indice_key=layer_dict['indice_keys'][i])
+                                    layer_dic['filters'][i + 1], 3, 
+                                    norm_fn=norm_fn, padding=1, 
+                                    conv_type=layer_dict['types'][i],
+                                    indice_key=layer_dict['indice_keys'][i])
                                     )
             self.downsample_layers.append(spconv.SparseSequential(*_sequentials))                
-            
+        
         last_pad = (0, 0, 0)
         self.conv4_out = spconv.SparseSequential(
             spconv.SparseConv3d(32 + 32*3 + 32 * 3, 64, (1, 1, 1), stride=(1, 1, 1), padding=last_pad,
@@ -57,7 +57,6 @@ class BiGNN(nn.Module):
             self.grouper_forward_fns.append(partial(structured_forward, grouper=self.groupers[-1],
                                             **grouper_dict['maps'])
     
-            
     def forward(self, x, **kwargs):
         rx_list = []
         x = self.conv_input(x)
@@ -65,45 +64,18 @@ class BiGNN(nn.Module):
         for layer in self.downsample_layers:
             x = layer(x)
             rx_list.append(x)
+
+        lrx_list = []        
         
         for gf_fn in self.grouper_forward_fns:
-            
-
-
-
-        # x_conv1 = self.conv1(x)
-        # rx_list.append(x_conv1)
-                
-        # x_conv2 = self.conv2(x_conv1)
-        # rx_list.append(x_conv2)
-
-        # if self.use_voxel_feature:
-            # out_dict = {'vf2': x_conv2}
-
-        # x_conv3 = self.conv3(x_conv2)
-        # rx_list.append(x_conv3)
-
-        # x_conv4 = self.conv4(x_conv3)
-        # rx_list.append(x_conv4)
-
-        # structured_feats14 = self.conv14_structured_forward(rx_list, batch_size=kwargs['batch_size'])
-
-        # structured_feats24 = self.conv24_structured_forward(lrx=x_conv4, hrx=x_conv2, batch_size=kwargs['batch_size'])
-
-        # structured_feats34 = self.conv34_structured_forward(lrx=x_conv4, hrx=x_conv3, batch_size=kwargs['batch_size'])
-
-        # structured_conv4 = self.cat_sparse_features([structured_feats14, structured_feats24, structured_feats34], x_conv4)
+            _lrx = gf_fn(x, kwargs['batch_size'])
+            lrx_list.append(_lrx)
         
-        # for detection head        
+        lrx = torch.cat([x[-1], *lrx_list], dim=-1)
+        x[-1].features = lrx
         # [200, 176, 5] -> [200, 176, 2]
-        out = self.conv4_out(structured_conv4)
-        if self.use_voxel_feature:
-            out_dict['vf1'] = out
-        if self.use_voxel_feature:
-            return out,  (None), out_dict
-        else:
-            return out, (None)
-
+        out = self.conv4_out(x[-1])
+        return out
 
 
 class BiGNN_V1(nn.Module):

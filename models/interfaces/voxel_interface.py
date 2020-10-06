@@ -14,6 +14,6 @@ class SimpleVoxel(nn.Module):
         self.name = name
         self.num_input_features = num_input_features
     
-    def forward(self, features, num_voxels):
+    def forward(self, features, **kwargs):
         return features
     

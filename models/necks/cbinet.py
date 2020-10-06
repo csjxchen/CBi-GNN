@@ -14,21 +14,43 @@ import models.necks.components as components
 # from .bignn import BiGNN_V1, BiGNN_V2, BiGNN_V3
 class CBiNet(nn.Module):
     def __init__(self, model_cfg):
+        
         """The principal part of detector(CBi-GNN)
         Args:
             model_cfg (dict): define the architecture of model
         """
+        super(CBiNet, self).__init__()
         self.model_cfg = model_cfg
+        self.sparse_shape = self.model_cfg['output_shape']
         ThrDNet_cfg = self.model_cfg.ThrDNet
+
         _thrdnet_args = ThrDNet_cfg.copy()
         _thrdnet_type = _thrdnet_args.pop('type') 
         self.Thrdnet = components[_thrdnet_type](_thrdnet_args)
-
+        
+        
         TwoDNet_cfg = self.model_cfg.TwoDNet
         _twodnet_args = TwoDNet_cfg.copy()
         _twodnet_type = _twodnet_args.pop('type')
         self.Twodnet = components[_twodnet_type](_twodnet_args)
         
     def forward(self, data):
+        """
+        Args:
+            data (dict):  {"voxel_input", "coords",  "batch_size"}
+        Return:
+            bev_features: for rpn head
+            alignment_features: for alignment head
+        """
+        x = spconv.SparseConvTensor(data['voxel_input'], data['coors'], self.sparse_shape, data['batch_size'])
         # ! TODO
-        pass
+        x = self.Thrdnet(x)
+        x = x.dense()
+        N, C, D, H, W = x.shape
+        x = x.view(N, C * D, H, W)
+        rpn_head_features, align_head_features = self.Twodnet(x)
+        outs = {
+            "rpn_head_features": rpn_head_features, 
+            "align_head_features": align_head_features
+        }
+        return outs

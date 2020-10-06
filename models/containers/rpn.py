@@ -14,8 +14,8 @@ classs RPN(nn.Module):
     @abstractmethod
     def init_architecture(self):
         pass
-
-    @abstractmethod
+        
+    # @abstractmethod
     def forward(self, data):
         if self.is_train:
             self.forward_train(data)

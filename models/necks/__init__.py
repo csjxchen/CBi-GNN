@@ -1,3 +1,3 @@
-from 
+from cbinet.py import *
 
-__all__ = []
+__all__ = ['Cbinet']

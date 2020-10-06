@@ -53,6 +53,6 @@ def structured_forward(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_
             new_lr_features.append(new_features.squeeze(0))
         new_lr_features = torch.cat(new_lr_features, dim=1)
         new_lr_features = new_lr_features.transpose(0, 1)
-        new_lr_features = torch.cat([lr_features, new_lr_features], dim=-1)
+        # new_lr_features = torch.cat([lr_features, new_lr_features], dim=-1)
         return new_lr_features
 
