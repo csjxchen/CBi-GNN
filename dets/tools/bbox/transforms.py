@@ -1,7 +1,7 @@
 import mmcv
 import numpy as np
 import torch
-from dets.datasets.kitti_utils import project_rect_to_image, project_velo_to_rect
+from dets.tools.utils.kitti_utils import project_rect_to_image, project_velo_to_rect
 from dets.tools.bbox3d.geometry import center_to_corner_box3d, limit_period
 
 

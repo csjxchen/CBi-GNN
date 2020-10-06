@@ -6,7 +6,7 @@ from mmcv.parallel import DataContainer as DC
 import torch
 from torch.utils.data import Dataset
 from mmcv.runner import obj_from_dict
-from dets.tools.utils.transforms import (ImageTransform, BboxTransform)
+from dets.tools.utils.data_transformers import (ImageTransform, BboxTransform)
 from dets.datasets.utils import to_tensor, random_scale
 from dets.tools.bbox3d import bbox3d_target
 from dets.tools.anchor import anchor3d_generator
