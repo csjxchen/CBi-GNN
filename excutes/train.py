@@ -16,16 +16,14 @@ from dets.tools.train_utils.envs import get_root_logger, set_random_seed
 # from tools.env import get_root_logger, init_dist, set_random_seed
 # from tools.train_utils import train_model
 import pathlib
-# from mmcv import Config
-# from dets.datasets import get_dataset
-# from mmdet.models import build_detector
-# from tools.train_utils.optimization import build_optimizer, build_scheduler
-# from tools.train_utils import load_params_from_file
-
-# def build_dataloader(data_cfg):
-
+from models.containers.detector import Detector 
+from dets.dataset.build_dataset import build_dataset
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
+    parser.add_argument("config", help='train config file path')
+    parser.add_argument('--gpus', type=int, default=1, help='number of gpus to use (only applicable to non-distributed training)')
+    # parser.add_argument("--exp_dir", help='the dir to save logs and models')
+
     # parser.add_argument('config', help='train config file path')
     # parser.add_argument('--work_dir', help='the dir to save logs and models')
     # parser.add_argument(
@@ -54,17 +52,20 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
 def main():
     args  = parse_args()
     config = Config.fromfile(args.config)   
-    # if not os.path.exists(args.exp_dir):
-    # os.makedirs(args.exp_dir, exist_ok=True)
     pathlib.Path(cfg.exp_dir).mkdir(parents=True, exist_ok=True)
-    print(f"Experiments are recorded into {args.exp_dir}")
-    logger = get_root_logger(cfg.exp_dir)
+    print(f"Experiments are recorded into {config.exp_dir}")
+    logger = get_root_logger(config.exp_dir)
     logger.info(f"Training on {args.gpus} GPUs")
     if args.seed is not None:
         logger.info('Set random seed to {}'.format(args.seed))
         set_random_seed(args.seed)
     
-    
+    model = Detector(config.model, config.train_cfg, config.test_cfg)
+    dataset = build_dataset(config.data.train)
+
+if __name__ == "__main__":
+    main()

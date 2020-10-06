@@ -3,7 +3,8 @@ from .rfn import RFN
 from .rpn import RPN
 
 class Detector(nn.Module):
-    def __init__(self, model_cfg,
+    def __init__(self, 
+                model_cfg,
                 train_cfg, 
                 test_cfg
                 ):
@@ -41,5 +42,7 @@ class Detector(nn.Module):
         data = self.rpn(data_dict)
         if self.rfn is not None:
             data = self.rfn(data_dict) 
+        
+        
         return data
         

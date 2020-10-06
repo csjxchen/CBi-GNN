@@ -173,7 +173,6 @@ data = dict(
         root=data_root + 'training/',
         ann_file=data_root + '../ImageSets/trainval.txt',
         img_prefix=None,
-        img_scale=(1242, 375),
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
         flip_ratio=0.5,
@@ -261,7 +260,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = '../saved_model_vehicle_Bi-GNN_online'
+exp_dir = '../saved_model_vehicle_Bi-GNN_online'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

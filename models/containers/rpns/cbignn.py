@@ -48,8 +48,6 @@ class CBIGNN(RPN):
         
         neck_outs = self.neck({"voxel_input": voxel_x,  "coords":data['coordinates'], "batch_size": batch_size})
 
-
-
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
                     "gt_bboxes": gt_bboxes,

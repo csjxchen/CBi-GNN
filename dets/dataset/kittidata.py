@@ -22,7 +22,8 @@ from dets.tools.point_cloud.voxel_generator import VoxelGenerator
 from dets.ops.points_op import points_op_cpu
 
 class KittiLiDAR(Dataset):
-    def __init__(self, root, 
+    def __init__(self, 
+                 root, 
                  ann_file,
                  img_prefix,
                  img_norm_cfg,
@@ -32,7 +33,7 @@ class KittiLiDAR(Dataset):
                  with_point=False,
                  with_mask=False,
                  with_label=True,
-                 class_names = ['Car', 'Van'],
+                 class_names=['Car', 'Van'],
                  augmentor=None,
                  generator=None,
                  anchor_generator=None,
@@ -40,7 +41,6 @@ class KittiLiDAR(Dataset):
                  target_encoder=None,
                  out_size_factor=2,
                  test_mode=False):
-        
         self.root = root    
         self.class_names = class_names
         self.test_mode = test_mode
@@ -50,14 +50,13 @@ class KittiLiDAR(Dataset):
         self.lidar_prefix = osp.join(root, 'velodyne_reduced')
         self.calib_prefix = osp.join(root, 'calib')
         self.label_prefix = osp.join(root, 'label_2')
-
+        
         with open(ann_file, 'r') as f:
             self.sample_ids = list(map(int, f.read().splitlines()))
-        
         # delete set_group_flag
         self.img_manager = ImageManager(root, img_norm_cfg=img_norm_cfg, size_divisor=size_divisor)
         self.auxiliary_tools(augmentor, generator, target_encoder, out_size_factor, anchor_area_threshold)
-    
+
     def auxiliary_tools(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
         # give dict args 
         self.augmentor = obj_from_dict(augmentor, point_augmentor)
@@ -184,7 +183,6 @@ class KittiLiDAR(Dataset):
             data['num_points'] = DC(to_tensor(num_points))
 
             if self.anchor_area_threshold >= 0 and self.anchors is not None: 
-                 self.with_mask:
                 dense_voxel_map = sparse_sum_for_anchors_mask(
                     coordinates, tuple(grid_size[::-1][1:]))
                 dense_voxel_map = dense_voxel_map.cumsum(0)
@@ -351,7 +349,7 @@ class ImageManager(object):
         self.transformer = ImageTransform(
             size_divisor=size_divisor, **img_norm_cfg)
     
-    def __call__(self, sample_id, scale, flip=False)
+    def __call__(self, sample_id, scale, flip=False):
         img = mmcv.imread(osp.join(self.path, '%06d.png' % sample_id))
         img, img_shape, pad_shape, scale_factor = self.transformer(img, scale=1, False)
         return img, img_shape, pad_shape, scale_factor
