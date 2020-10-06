@@ -41,7 +41,7 @@ def parse_args():
     #     default=1,
     #     help='number of gpus to use '
     #          '(only applicable to non-distributed training)')
-    # parser.add_argument('--seed', type=int, default=0, help='random seed')
+    parser.add_argument('--seed', type=int, default=0, help='random seed')
     # parser.add_argument(
     #     '--launcher',
     #     choices=['none', 'pytorch', 'slurm', 'mpi'],
@@ -54,9 +54,9 @@ def parse_args():
 
 def main():
     args  = parse_args()
-    print(args.config)
+    # print(args.config)
     config = Config.fromfile(args.config)   
-    pathlib.Path(cfg.exp_dir).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(config.exp_dir).mkdir(parents=True, exist_ok=True)
     print(f"Experiments are recorded into {config.exp_dir}")
     logger = get_root_logger(config.exp_dir)
     logger.info(f"Training on {args.gpus} GPUs")
@@ -64,7 +64,6 @@ def main():
         logger.info('Set random seed to {}'.format(args.seed))
         set_random_seed(args.seed)
     
-
     model = Detector(config.model, config.train_cfg, config.test_cfg)
     dataset = build_dataset(config.data.train)
 

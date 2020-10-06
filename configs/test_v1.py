@@ -79,7 +79,6 @@ model = dict(
                     type='PCDetBEVNet2',
                     args=dict(
                         in_features=256,
-                        num_filters=256,
                         concat_input=False, 
                         num_input_features=256,
                         layer_nums=[5, 5],
@@ -260,7 +259,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../saved_model_vehicle_Bi-GNN_online'
+exp_dir = '../experiments/test/test_v1'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
