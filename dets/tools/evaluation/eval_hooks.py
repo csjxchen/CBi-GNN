@@ -2,7 +2,6 @@ import os
 import os.path as osp
 import shutil
 import time
-
 import mmcv
 import numpy as np
 import torch
@@ -10,14 +9,13 @@ from mmcv.runner import Hook, obj_from_dict
 from mmcv.parallel import scatter, collate, MMDataParallel
 from pycocotools.cocoeval import COCOeval
 from torch.utils.data import Dataset
-
-from .coco_utils import results2json, fast_eval_recall
+# from .coco_utils import results2json, fast_eval_recall
 from dets import datasets
-from .class_names import get_classes
-import tools.kitti_common as kitti
-from dets.tools.evaluation.kitti_eval import get_official_eval_result
-from dets.datasets import utils, loader
-from .mean_ap import eval_map
+# from .class_names import get_classes
+import dets.tools.utils.kitti_common as kitti
+# from dets.tools.evaluation.kitti_eval import get_official_eval_result
+from dets.tools.utils import utils, loader
+# from .mean_ap import eval_map
 
 class DistEvalHook(Hook):
 

@@ -34,7 +34,7 @@ model = dict(
                                 maps=dict(
                                     lr_index=3,
                                     hr_index=0,
-                                    lr_voxel_size=(0.4, 0.4, 1.0]),   
+                                    lr_voxel_size=(0.4, 0.4, 1.0),   
                                     hr_voxel_size=(0.05, 0.05, 0.1),
                                     offset=(0., -40., -3.)
                                     )),
@@ -79,7 +79,7 @@ model = dict(
                     type='PCDetBEVNet2',
                     args=dict(
                         in_features=256,
-                        num_filters=256
+                        num_filters=256,
                         concat_input=False, 
                         num_input_features=256,
                         layer_nums=[5, 5],

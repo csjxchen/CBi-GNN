@@ -1,7 +1,8 @@
 
 import torch.nn as nn
+from abc import ABCMeta, abstractmethod
 
-classs RPN(nn.Module):
+class RPN(nn.Module):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
         super(RPN, self).__init__()
         self.model_cfg = model_cfg
@@ -11,6 +12,7 @@ classs RPN(nn.Module):
         # for k, m in self.model_cfg.items():
             # eval_model_str = f"self.{k} = {m.type}(**m)"
             # eval(eval_model_str)
+    
     @abstractmethod
     def init_architecture(self):
         pass

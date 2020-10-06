@@ -11,13 +11,14 @@ import argparse
 # from mmdet.core import (DistOptimizerHook, CocoDistEvalRecallHook,
                         # CocoDistEvalmAPHook, KittiEvalmAPHook, DistEvalmAPHook)
 # from mmdet.datasets import build_dataloader
-from dets.dataset.kittidata import KittiLiDAR
+from dets.datasets.kittidata import KittiLiDAR
 from dets.tools.train_utils.envs import get_root_logger, set_random_seed
 # from tools.env import get_root_logger, init_dist, set_random_seed
 # from tools.train_utils import train_model
 import pathlib
+from mmcv import Config
 from models.containers.detector import Detector 
-from dets.dataset.build_dataset import build_dataset
+from dets.datasets.build_dataset import build_dataset
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument("config", help='train config file path')
@@ -48,13 +49,12 @@ def parse_args():
     #     help='job launcher')
     # parser.add_argument('--local_rank', type=int, default=0)
     # parser.add_argument('--max_ckpt_save_num', type=int, default=100)
-
     args = parser.parse_args()
-
     return args
 
 def main():
     args  = parse_args()
+    print(args.config)
     config = Config.fromfile(args.config)   
     pathlib.Path(cfg.exp_dir).mkdir(parents=True, exist_ok=True)
     print(f"Experiments are recorded into {config.exp_dir}")
@@ -64,8 +64,9 @@ def main():
         logger.info('Set random seed to {}'.format(args.seed))
         set_random_seed(args.seed)
     
+
     model = Detector(config.model, config.train_cfg, config.test_cfg)
     dataset = build_dataset(config.data.train)
-    
+
 if __name__ == "__main__":
     main()

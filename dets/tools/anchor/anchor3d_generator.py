@@ -82,7 +82,7 @@ def create_anchors_3d_stride(feature_size,
     rets = rets.insert(3, anchor_size)
     rets = np.concatenate(rets, axis=-1)
     return np.transpose(rets, [2, 1, 0, 3, 4, 5]) 
-''''
+'''
 def create_anchors_3d_range(feature_size,
                             anchor_range,
                             sizes=[1.6, 3.9, 1.56],

@@ -1,7 +1,7 @@
 import torch
 from .geometry import bbox_overlaps
 from dets.tools.bbox3d import region_similarity
-from dets.tools.extras.iou3d import iou3d_utils
+from dets.ops.iou3d import iou3d_utils
 class BBoxAssigner(object):
     """Assign a corresponding gt bbox or background to each bbox.
 

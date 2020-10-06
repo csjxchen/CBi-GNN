@@ -1,5 +1,5 @@
 import numpy as np
-from dets.tools.extras.points_op import points_to_voxel
+from dets.ops.points_op import points_to_voxel
 
 class VoxelGenerator:
     def __init__(self,
