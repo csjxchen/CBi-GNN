@@ -31,9 +31,13 @@ class BiGNN(nn.Module):
             _sequentials = []
             
             for i in range(len(layer_dict['types'])):
-                _sequentials.append(block(layer_dict['filters'][i], 
-                                    layer_dict['filters'][i + 1], 3, 
-                                    norm_fn=norm_fn, padding=1, 
+                _sequentials.append(block(
+                                    layer_dict['filters'][i], 
+                                    layer_dict['filters'][i + 1], 
+                                    3, 
+                                    stride=layer_dict['strides'][i],
+                                    norm_fn=norm_fn, 
+                                    padding=layer_dict['paddings'][i] if len(layer_dict['paddings'][i]) > 1 else layer_dict['paddings'][i][0], 
                                     conv_type=layer_dict['types'][i],
                                     indice_key=layer_dict['indice_keys'][i])
                                     )
@@ -60,20 +64,21 @@ class BiGNN(nn.Module):
         rx_list = []
         x = self.conv_input(x)
 
-        for layer in self.downsample_layers:
+        for i, layer in enumerate(self.downsample_layers):
+            # print(f"layer {i}")
             x = layer(x)
             rx_list.append(x)
 
         lrx_list = []        
         
         for gf_fn in self.grouper_forward_fns:
-            _lrx = gf_fn(x, kwargs['batch_size'])
+            _lrx = gf_fn(rx_list, batch_size=kwargs['batch_size'])
             lrx_list.append(_lrx)
         
-        lrx = torch.cat([x[-1], *lrx_list], dim=-1)
-        x[-1].features = lrx
+        lrx = torch.cat([rx_list[-1].features, *lrx_list], dim=-1)
+        rx_list[-1].features = lrx
         # [200, 176, 5] -> [200, 176, 2]
-        out = self.conv4_out(x[-1])
+        out = self.conv4_out(rx_list[-1])
         return out
 
 

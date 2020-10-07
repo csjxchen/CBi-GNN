@@ -16,11 +16,10 @@ model = dict(
                     type="BiGNN",
                     args=dict(
                         conv_inputs=[4, 16],
-                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'], 'filters': [16, 32]},
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'filters': [32, 32, 32]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'filters': [32, 32, 64]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'filters': [64, 64, 32]}, 
-                                    ],
+                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
+                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
+                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'paddings': [[1], [1]], 'strides':[2, 1], 'filters': [32, 32, 64]}, 
+                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2, 1], 'filters': [64, 64, 32]}],
                         groupers=[
                                 dict(
                                     grouper_type='GrouperDisAttention',
@@ -28,7 +27,7 @@ model = dict(
                                     args=dict(
                                         radius=1.0,
                                         nsamples=128,
-                                        mlps=[16, 32],
+                                        mlps=[32, 32],
                                         use_xyz=True,
                                         bn=False,
                                         instance_norm=False

@@ -41,6 +41,7 @@ class CBiNet(nn.Module):
             alignment_features: for alignment head
         """
         x = spconv.SparseConvTensor(data['voxel_input'], data['coords'], self.sparse_shape, data['batch_size'])
+        
         # ! TODO
         x = self.Thrdnet(x, batch_size=data['batch_size'])
         x = x.dense()

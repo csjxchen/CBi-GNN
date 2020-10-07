@@ -2,6 +2,7 @@
 import torch.nn as nn
 from abc import ABCMeta, abstractmethod
 import torch
+import torch.nn.functional as F
 class RPN(nn.Module):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
         super(RPN, self).__init__()

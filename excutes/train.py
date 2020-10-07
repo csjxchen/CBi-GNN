@@ -72,7 +72,7 @@ def main():
         set_random_seed(args.seed)
     
     print("---------------------------------------initialize training members ---------------------------------------")
-    model = Detector(cfg.model, cfg.train_cfg, cfg.test_cfg)
+    model = Detector(cfg.model, cfg.train_cfg, cfg.test_cfg, is_train=True)
     if distributed:
         raise NotImplemented
     else:

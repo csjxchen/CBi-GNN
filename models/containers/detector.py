@@ -6,7 +6,7 @@ class Detector(nn.Module):
     def __init__(self, 
                 model_cfg,
                 train_cfg, 
-                test_cfg
+                test_cfg, is_train=True
                 ):
         super(Detector, self).__init__()
         """Container for generalized detector
@@ -15,17 +15,18 @@ class Detector(nn.Module):
             train_cfg (dict): setting in train_forward
             test_cfg (dict): [description]
         """
+        self.is_train = is_train
         if "rpn" in model_cfg.keys():
             rpn_dict = model_cfg.rpn.copy()
             rpn_type = rpn_dict.pop('type')
-            self.rpn  = rpn_models[rpn_type](model_cfg.rpn, train_cfg.rpn, test_cfg.rpn)
-
+            self.rpn  = rpn_models[rpn_type](model_cfg.rpn, train_cfg.rpn, test_cfg.rpn, is_train=self.is_train)
+        
         if "rfn" in model_cfg.keys():
             self.rfn  = RFN(model_cfg.rfn, train_cfg.rfn, test_cfg.rfn)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
     
-    def forward(self, data_dict, train=True):
+    def forward(self, data_dict):
         """forward process of detector 
             Args:
                 data_dict:{'gt_labels': [class]
@@ -45,7 +46,6 @@ class Detector(nn.Module):
         data = self.rpn(data_dict)
         if self.rfn is not None:
             data = self.rfn(data_dict) 
-        
         
         return data
         

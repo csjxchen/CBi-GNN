@@ -5,11 +5,12 @@ from dets.ops.iou3d import iou3d_utils
 from dets.ops.iou3d.iou3d_utils import boxes3d_to_bev_torch, boxes_iou_bev
 import torch
 import torch.nn.functional as F
-# from mmdet.core.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss, weighted_cross_entropy
-# from mmdet.core.utils.misc import multi_apply
-# from mmdet.core.bbox3d.target_ops import create_target_torch
+from dets.tools.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss, weighted_cross_entropy
+from dets.tools.utils.misc import multi_apply
+from dets.tools.bbox3d.target_ops import create_target_torch
+from models.heads.head_utils import second_box_decode, second_box_encode
 import dets.tools.bbox3d.box_coders as boxCoders
-# from mmdet.core.post_processing.bbox_nms import rotate_nms_torch
+from dets.tools.post_processing.bbox_nms import rotate_nms_torch
 from functools import partial
 # import models.heads.extra_heads as extra_heads 
 from models.heads.alignment_heads import alignment_head_models 
@@ -53,12 +54,14 @@ class SSDRotateHead(nn.Module):
             self.conv_dir_cls = nn.Conv2d(
                 num_output_filters, num_anchor_per_loc * 2, 1)
         # self.extra_head_cfg = extra_head_cfg
-        
+        self.alignment_head_cfg = alignment_head_cfg
+        self.init_alignment_head()
+    
     def init_alignment_head(self):
         if self.alignment_head_cfg:
             _alignment_head_cfg = self.alignment_head_cfg.copy()
             _alignment_head_args = _alignment_head_cfg.args
-            self.alignment_head = alignment_head_models[_alignment_head_type.type](**_alignment_head_args)
+            self.alignment_head = alignment_head_models[_alignment_head_cfg.type](**_alignment_head_args)
         else:
             self.alignment_head = None
     
@@ -167,11 +170,11 @@ class SSDRotateHead(nn.Module):
         cls_preds = cls_preds.permute(0, 2, 3, 1).contiguous()
 
         if self._use_direction_classifier:
-            dir_cls_preds = self.conv_dir_cls(x)
+            dir_cls_preds = self.conv_dir_cls(rpn_head_features)
             dir_cls_preds = dir_cls_preds.permute(0, 2, 3, 1).contiguous()
         
         rpn_outs = (box_preds, cls_preds, dir_cls_preds)
-        if self.alignment_head:
+        if self.alignment_head_cfg:
             align_head_features = data['align_head_features']
             anchors_mask        = data['anchors_mask']
             gt_bboxes           = data['gt_bboxes']

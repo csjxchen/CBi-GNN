@@ -2,7 +2,7 @@ import torch.nn as nn
 from  torch.nn  import Sequential
 from functools import partial
 from models.utils import change_default_args, Sequential
-
+import torch
 
 __all__ = ['BEVNet', 'PCDetBEVNet']
 class BEVNet(nn.Module):
@@ -137,6 +137,6 @@ class PCDetBEVNet(nn.Module):
             x = self.deblocks[-1](x)        
         
         conv_ps = ups[0].clone()
-
+        
         x = self.conv_out(x)
         return x, conv_ps 

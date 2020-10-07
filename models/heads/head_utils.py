@@ -1,4 +1,5 @@
 
+import torch
 def second_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
     """box encode for VoxelNet in lidar
     Args:

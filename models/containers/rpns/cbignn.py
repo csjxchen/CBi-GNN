@@ -30,9 +30,6 @@ class CBIGNN(RPN):
             rpn_head_type = rpn_head_dict.pop('type')
             self.rpn_head = rpn_heads_models[rpn_head_type](**rpn_head_dict.args)
 
-    
-
-
     def forward_train(self, data):
         """
         Args:
@@ -53,16 +50,15 @@ class CBIGNN(RPN):
         
         data = self.merge_second_batch(data)
         voxel_x = self.backbone(features=data['voxels'])
-        
+
         neck_outs = self.neck({"voxel_input": voxel_x,  "coords":data['coordinates'], "batch_size": batch_size})
 
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
-                    "gt_bboxes": gt_bboxes,
-                    "anchors":  anchors,
-                    "batch_size": batch_size 
-                }
-                )
+                "gt_bboxes": data['gt_bboxes'],
+                "anchors": data['anchors'],
+                "batch_size": batch_size 
+                })
         # data [dict]: with keys (rpn_head_features, 
         #                     [align_head_features, 
         #                     anchors_mask,
