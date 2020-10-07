@@ -17,14 +17,12 @@ class BiGNN(nn.Module):
         norm_fn = partial(nn.BatchNorm1d, eps=1e-3, momentum=0.01)
         # self.use_voxel_feature = use_voxel_feature
         self.model_cfg = model_cfg
-        
         self.conv_input = spconv.SparseSequential(
             spconv.SubMConv3d(self.model_cfg.conv_inputs[0],  self.model_cfg.conv_inputs[1], 3, padding=1, bias=False, indice_key='subm1'),
             norm_fn(self.model_cfg.conv_inputs[1]),
             nn.ReLU(),
         )
         block = post_act_block
-
         self.downsample_layers = nn.ModuleList()
         for layer_dict in self.model_cfg.downsample_layers: 
             # for l in layers:
@@ -53,7 +51,7 @@ class BiGNN(nn.Module):
         self.grouper_forward_fns = []
         for i in range(len(self.model_cfg.groupers)):
             grouper_dict = self.model_cfg.groupers[i]
-            print(grouper_dict)
+            # print(grouper_dict)
             self.groupers.append(grouper_models[grouper_dict['grouper_type']](**grouper_dict.args))
             self.grouper_forward_fns.append(partial(structured_forward, grouper=self.groupers[-1],
                                             **grouper_dict['maps']))

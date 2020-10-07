@@ -8,7 +8,6 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from mmcv.runner import get_dist_info
 
-
 def init_dist(launcher, backend='nccl', **kwargs):
     if mp.get_start_method(allow_none=True) is None:
         mp.set_start_method('spawn')
@@ -21,7 +20,6 @@ def init_dist(launcher, backend='nccl', **kwargs):
     else:
         raise ValueError('Invalid launcher type: {}'.format(launcher))
 
-
 def _init_dist_pytorch(backend, **kwargs):
     # TODO: use local_rank instead of rank % num_gpus
     rank = int(os.environ['RANK'])
@@ -33,17 +31,14 @@ def _init_dist_pytorch(backend, **kwargs):
 def _init_dist_mpi(backend, **kwargs):
     raise NotImplementedError
 
-
 def _init_dist_slurm(backend, **kwargs):
     raise NotImplementedError
-
 
 def set_random_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-
 
 def get_root_logger(work_dir):
     logging.basicConfig(

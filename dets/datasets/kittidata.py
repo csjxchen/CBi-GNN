@@ -42,6 +42,7 @@ class KittiLiDAR(Dataset):
                  target_encoder=None,
                  out_size_factor=2,
                  test_mode=False):
+        super(KittiLiDAR, self).__init__()
         self.root = root    
         self.class_names = class_names
         self.test_mode = test_mode
@@ -189,11 +190,10 @@ class KittiLiDAR(Dataset):
                 dense_voxel_map = dense_voxel_map.cumsum(0)
                 dense_voxel_map = dense_voxel_map.cumsum(1)
                 if self.with_mask:
-                    mask = fused_get_anchors_area(
-                        dense_voxel_map, v, voxel_size, pc_range,
-                        grid_size) > self.anchor_area_threshold
-                    anchors_mask[k] = DC(to_tensor(mask.astype(np.bool)))
-                    data['anchors_mask'] = anchors_mask
+                    anchors_area = fused_get_anchors_area(
+                        dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
+                    anchors_mask = anchors_area > self.anchor_area_threshold
+                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
                 else:
                     N = self.anchors_bv.shape[0]
                     anchors_area = np.ones((N), dtype=np.float32) + 10
@@ -312,7 +312,7 @@ class KittiLiDAR(Dataset):
         return data
     
     @staticmethod
-    def collate_fn(self, batch_list):
+    def collate_fn(batch_list):
         example_merged = defaultdict(list)
         for example in batch_list:
             for k, v in example.items():
