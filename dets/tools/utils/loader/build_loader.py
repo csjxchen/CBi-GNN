@@ -4,12 +4,10 @@ from mmcv.runner import get_dist_info
 from mmcv.parallel import collate
 from torch.utils.data import DataLoader
 from .sampler import GroupSampler, DistributedGroupSampler
-from dets.datasets import KittiLiDAR
 # https://github.com/pytorch/pytorch/issues/973
 import resource
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
-
 
 def build_dataloader(dataset,
                      imgs_per_gpu,
@@ -36,7 +34,7 @@ def build_dataloader(dataset,
         batch_size=batch_size,
         sampler=sampler,
         num_workers=num_workers,
-        collate_fn=KittiLiDAR.collate_fn,
+        collate_fn=partial(collate, samples_per_gpu=imgs_per_gpu),
         pin_memory=False,
         **kwargs)
     

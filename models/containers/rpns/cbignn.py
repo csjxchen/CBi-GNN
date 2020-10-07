@@ -30,6 +30,9 @@ class CBIGNN(RPN):
             rpn_head_type = rpn_head_dict.pop('type')
             self.rpn_head = rpn_heads_models[rpn_head_type](**rpn_head_dict.args)
 
+    
+
+
     def forward_train(self, data):
         """
         Args:
@@ -43,8 +46,12 @@ class CBIGNN(RPN):
                         anchors
         """
         losses = {}
-        batch_size =  len(data['img_meta'])
+
+        img_meta = data.pop('img_meta')
+        img = data.pop('img')
+        batch_size =  len(img_meta)
         
+        data = self.merge_second_batch(data)
         voxel_x = self.backbone(features=data['voxels'])
         
         neck_outs = self.neck({"voxel_input": voxel_x,  "coords":data['coordinates'], "batch_size": batch_size})

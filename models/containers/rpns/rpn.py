@@ -1,7 +1,7 @@
 
 import torch.nn as nn
 from abc import ABCMeta, abstractmethod
-
+import torch
 class RPN(nn.Module):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
         super(RPN, self).__init__()
@@ -16,7 +16,33 @@ class RPN(nn.Module):
     @abstractmethod
     def init_architecture(self):
         pass
-        
+    
+
+    def merge_second_batch(self, batch_args):
+        ret = {}
+        for key, elems in batch_args.items():
+            if key in [
+                'voxels', 'num_points',
+            ]:
+                # if key== 'voxels':
+                #     print(elems[0].shape)
+                ret[key] = torch.cat(elems, dim=0)
+            elif key == 'coordinates':
+                coors = []
+                for i, coor in enumerate(elems):
+                    coor_pad = F.pad(
+                        coor, [1, 0, 0, 0],
+                        mode='constant',
+                        value=i)
+                    coors.append(coor_pad)
+                ret[key] = torch.cat(coors, dim=0)
+            elif key in [
+                'img_meta', 'gt_labels', 'gt_bboxes',
+            ]:
+                ret[key] = elems
+            else:
+                ret[key] = torch.stack(elems, dim=0)
+        return ret
     # @abstractmethod
     def forward(self, data):
         if self.is_train:

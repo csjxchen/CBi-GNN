@@ -126,12 +126,14 @@ class KittiLiDAR(Dataset):
         )
         data = dict(
             img=to_tensor(img),
+            # img_meta = img_meta
             img_meta = DC(img_meta, cpu_only=True)
         )
         # initial anchors for one-stage detector 
         if self.anchors is not None:
             # print("using andchors mask!!!")
             data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32)))
+            # data['anchors'] = to_tensor(self.anchors.astype(np.float32))
         # if with_mask
         if self.with_mask:
             NotImplemented
@@ -183,7 +185,9 @@ class KittiLiDAR(Dataset):
             data['voxels'] = DC(to_tensor(voxels.astype(np.float32)))
             data['coordinates'] = DC(to_tensor(coordinates))
             data['num_points'] = DC(to_tensor(num_points))
-
+            # data['voxels'] = to_tensor(voxels.astype(np.float32))
+            # data['coordinates'] = to_tensor(coordinates)
+            # data['num_points'] = to_tensor(num_points)
             if self.anchor_area_threshold >= 0 and self.anchors is not None: 
                 dense_voxel_map = sparse_sum_for_anchors_mask(
                     coordinates, tuple(grid_size[::-1][1:]))
@@ -200,7 +204,7 @@ class KittiLiDAR(Dataset):
                     anchors_mask = anchors_area > self.anchor_area_threshold
                     # print(N, anchors_mask.sum())
                     data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.bool)))
-
+            
             # filter gt_bbox out of range
             bv_range = self.generator.point_cloud_range[[0, 1, 3, 4]]
             mask = filter_gt_box_outside_range(gt_bboxes, bv_range)
@@ -221,7 +225,8 @@ class KittiLiDAR(Dataset):
         if self.with_label:
             data['gt_labels'] = DC(to_tensor(gt_labels))
             data['gt_bboxes'] = DC(to_tensor(gt_bboxes))
-        
+            # data['gt_labels'] = to_tensor(gt_labels)
+            # data['gt_bboxes'] = to_tensor(gt_bboxes)
         return data
 
     def prepare_test_img(self, idx):
@@ -255,11 +260,11 @@ class KittiLiDAR(Dataset):
 
         data = dict(
             img=to_tensor(img),
-            img_meta=DC(img_meta, cpu_only=True)
+            img_meta=img_meta
         )
         
         if self.anchors is not None:
-            data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32)))
+            data['anchors'] = to_tensor(self.anchors.astype(np.float32))
 
         if self.with_mask:
             NotImplemented
@@ -278,9 +283,9 @@ class KittiLiDAR(Dataset):
                 voxel_size[::-1], dtype=np.float32)).astype(np.int32)
             num_points = np.ones(len(keep)).astype(np.int32)
 
-            data['voxels'] = DC(to_tensor(voxels.astype(np.float32)))
-            data['coordinates'] = DC(to_tensor(coordinates))
-            data['num_points'] = DC(to_tensor(num_points))
+            data['voxels'] = to_tensor(voxels.astype(np.float32))
+            data['coordinates'] = to_tensor(coordinates)
+            data['num_points'] = to_tensor(num_points)
             
             if self.anchor_area_threshold >= 0 and self.anchors is not None :
                 dense_voxel_map = sparse_sum_for_anchors_mask(
@@ -291,24 +296,21 @@ class KittiLiDAR(Dataset):
                     anchors_area = fused_get_anchors_area(
                         dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
                     anchors_mask = anchors_area > self.anchor_area_threshold
-                    data['anchors_mask'] =  DC(to_tensor(anchors_mask.astype(np.uint8)))
+                    data['anchors_mask'] =  to_tensor(anchors_mask.astype(np.uint8))
                 else:
                     N = self.anchors_bv.shape[0]
                     anchors_area = np.ones((N), dtype=np.float32) + 10
                     anchors_mask = anchors_area > self.anchor_area_threshold
                     # print(N, anchors_mask.sum())
-                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
-
-
+                    data['anchors_mask'] = to_tensor(anchors_mask.astype(np.uint8))
 
         if self.with_label:
-            data['gt_labels'] = DC(to_tensor(gt_labels), cpu_only=True)
-            data['gt_bboxes'] = DC(to_tensor(gt_bboxes), cpu_only=True)
+            data['gt_labels'] = to_tensor(gt_labels)
+            data['gt_bboxes'] = to_tensor(gt_bboxes)
         else:
-            data['gt_labels'] = DC(None, cpu_only=True)
-            data['gt_bboxes'] = DC(None, cpu_only=True)
-
-
+            data['gt_labels'] = None
+            data['gt_bboxes'] = None
+        
         return data
     
     @staticmethod
@@ -336,10 +338,11 @@ class KittiLiDAR(Dataset):
                     coors.append(coor_pad)
                 ret[key] = torch.cat(coors, dim=0)
             elif key in [
-                'img_meta', 'gt_labels', 'gt_bboxes',
+                'img_meta', 'gt_labels', 'gt_bboxes', 'img'
             ]:
                 ret[key] = elems
             else:
+                print(key)
                 ret[key] = torch.stack(elems, dim=0)
         
         return ret
