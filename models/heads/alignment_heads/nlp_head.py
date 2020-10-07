@@ -23,15 +23,18 @@ class NonlocalPart(AlignmentHead):
         self.channels = channels
         self.num_parts = num_parts
         out_channels = self.channels
-        self.gen_grid_fn = partial(gen_sample_grid, grid_offsets=grid_offsets, window_size=window_size, spatial_scale=1 / featmap_stride)
+        self.gen_grid_fn = partial(gen_sample_grid, 
+                                grid_offsets=grid_offsets, 
+                                window_size=window_size, 
+                                spatial_scale=1 / featmap_stride)
         self.convs = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, 3, 1, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels, eps=1e-3, momentum=0.01),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, 1, 1, padding=0, bias=False),
-            nn.BatchNorm2d(out_channels, eps=1e-3, momentum=0.01),
-            nn.ReLU(inplace=True),
-        )
+                    nn.Conv2d(in_channels, out_channels, 3, 1, padding=1, bias=False),
+                    nn.BatchNorm2d(out_channels, eps=1e-3, momentum=0.01),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(out_channels, out_channels, 1, 1, padding=0, bias=False),
+                    nn.BatchNorm2d(out_channels, eps=1e-3, momentum=0.01),
+                    nn.ReLU(inplace=True)
+                )
 
         self.theta_conv = nn.Sequential(nn.Conv2d(self.channels, int(self.channels/2), 1, 1, padding=0, bias=False), 
                                         nn.BatchNorm2d(int(self.channels/2), eps=1e-3, momentum=0.01))
