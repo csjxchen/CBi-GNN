@@ -1,6 +1,6 @@
 import torch.nn as nn 
-from .rfn import RFN
-from .rpn import RPN
+from .rfns import rfn_models
+from .rpns import rpn_models
 
 class Detector(nn.Module):
     def __init__(self, 
@@ -16,7 +16,9 @@ class Detector(nn.Module):
             test_cfg (dict): [description]
         """
         if "rpn" in model_cfg.keys():
-            self.rpn  = RPN(model_cfg.rpn, train_cfg.rpn, test_cfg.rpn)
+            rpn_dict = model_cfg.rpn.copy()
+            rpn_type = rpn_dict.pop('type')
+            self.rpn  = rpn_models[rpn_type](model_cfg.rpn, train_cfg.rpn, test_cfg.rpn)
 
         if "rfn" in model_cfg.keys():
             self.rfn  = RFN(model_cfg.rfn, train_cfg.rfn, test_cfg.rfn)

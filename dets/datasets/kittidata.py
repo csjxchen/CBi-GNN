@@ -56,7 +56,7 @@ class KittiLiDAR(Dataset):
             self.sample_ids = list(map(int, f.read().splitlines()))
         # delete set_group_flag
         self.img_manager = ImageManager(root, img_norm_cfg=img_norm_cfg, size_divisor=size_divisor)
-        self.auxiliary_tools(augmentor, generator, target_encoder, out_size_factor, anchor_area_threshold)
+        self.auxiliary_tools(augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold)
 
     def auxiliary_tools(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
         # give dict args 

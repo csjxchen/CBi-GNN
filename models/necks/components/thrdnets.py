@@ -9,8 +9,8 @@ from dets.tools import tensor2points
 import torch.nn.functional as F
 from functools import partial
 # from dets.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
-import dets.ops.pointnet2.groupers as groupers
-
+from dets.ops.pointnet2 import grouper_models 
+from .neck_utils import *
 class BiGNN(nn.Module):
     def __init__(self, model_cfg):
         super(BiGNN, self).__init__()
@@ -19,12 +19,12 @@ class BiGNN(nn.Module):
         self.model_cfg = model_cfg
         
         self.conv_input = spconv.SparseSequential(
-            spconv.SubMConv3d(self.model_cfg.conv_input[0],  self.model_cfg.conv_input[1], 3, padding=1, bias=False, indice_key='subm1'),
-            norm_fn(self.model_cfg.conv_input[1]),
+            spconv.SubMConv3d(self.model_cfg.conv_inputs[0],  self.model_cfg.conv_inputs[1], 3, padding=1, bias=False, indice_key='subm1'),
+            norm_fn(self.model_cfg.conv_inputs[1]),
             nn.ReLU(),
         )
         block = post_act_block
-        
+
         self.downsample_layers = nn.ModuleList()
         for layer_dict in self.model_cfg.downsample_layers: 
             # for l in layers:
@@ -34,7 +34,7 @@ class BiGNN(nn.Module):
             
             for i in range(len(layer_dict['types'])):
                 _sequentials.append(block(layer_dict['filters'][i], 
-                                    layer_dic['filters'][i + 1], 3, 
+                                    layer_dict['filters'][i + 1], 3, 
                                     norm_fn=norm_fn, padding=1, 
                                     conv_type=layer_dict['types'][i],
                                     indice_key=layer_dict['indice_keys'][i])
@@ -51,12 +51,13 @@ class BiGNN(nn.Module):
         
         self.groupers = nn.ModuleList()
         self.grouper_forward_fns = []
-        for i in len(self.model_cfg.groupers):
-            grouper_dict = self.model_cfg.groupers 
-            self.groupers.append(groupers[grouper_dict['type']](**grouper_dict.args))
+        for i in range(len(self.model_cfg.groupers)):
+            grouper_dict = self.model_cfg.groupers[i]
+            print(grouper_dict)
+            self.groupers.append(grouper_models[grouper_dict['grouper_type']](**grouper_dict.args))
             self.grouper_forward_fns.append(partial(structured_forward, grouper=self.groupers[-1],
-                                            **grouper_dict['maps'])
-    
+                                            **grouper_dict['maps']))
+
     def forward(self, x, **kwargs):
         rx_list = []
         x = self.conv_input(x)

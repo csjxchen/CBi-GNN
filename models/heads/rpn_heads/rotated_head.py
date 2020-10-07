@@ -11,7 +11,9 @@ import torch.nn.functional as F
 import dets.tools.bbox3d.box_coders as boxCoders
 # from mmdet.core.post_processing.bbox_nms import rotate_nms_torch
 from functools import partial
-import models.heads.extra_heads as extra_heads 
+# import models.heads.extra_heads as extra_heads 
+from models.heads.alignment_heads import alignment_head_models 
+
 # from ..utils import change_default_args, Sequential
 # from mmdet.ops.pointnet2.layers_utils import GrouperForGrids, GrouperxyzForGrids
 
@@ -57,7 +59,7 @@ class SSDRotateHead(nn.Module):
             _alignment_head_cfg = self.alignment_head_cfg.copy()
             _alignment_head_type = self.alignment_head_cfg.pop('type')
             _alignment_head_args = _alignment_head_cfg.args
-            self.alignment_head = alignment_heads[_alignment_head_type](**_alignment_head_args)
+            self.alignment_head = alignment_head_models[_alignment_head_type](**_alignment_head_args)
         else:
             self.alignment_head = None
     

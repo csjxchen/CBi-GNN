@@ -1,5 +1,8 @@
 import torch.nn as nn
+from  torch.nn  import Sequential
 from functools import partial
+from models.utils import change_default_args, Sequential
+
 
 __all__ = ['BEVNet', 'PCDetBEVNet']
 class BEVNet(nn.Module):
@@ -55,8 +58,9 @@ class BEVNet(nn.Module):
         return x, conv6
     
 class PCDetBEVNet(nn.Module):
-    def __init__(self, in_features, num_filters=256, **args):
-        super().__init__()
+    def __init__(self, args):
+        super(PCDetBEVNet, self).__init__()
+        print(args)
         self._concat_input = args['concat_input']
         assert len(args['layer_strides']) == len(args['layer_nums'])
         assert len(args['num_filters']) == len(args['layer_nums'])
@@ -109,8 +113,8 @@ class PCDetBEVNet(nn.Module):
         
         self.conv_out = Sequential(
                 # nn.ZeroPad2d(1),
-                Conv2d(c_in, num_filters, 1),
-                BatchNorm2d(num_filters),
+                Conv2d(c_in, args['num_output_features'], 1),
+                BatchNorm2d(args['num_output_features']),
                 nn.ReLU(),
             )
         

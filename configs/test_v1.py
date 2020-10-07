@@ -1,5 +1,6 @@
 model = dict(
         rpn=dict(
+            type="CBIGNN",
             backbone=dict(
                 type='SimpleVoxel',
                 num_input_features=4,
@@ -7,83 +8,85 @@ model = dict(
                 num_filters=[32, 64],
                 with_distance=False),
             neck=dict(
-                type='CBiGNN',
+                type='CBiNet',
                 output_shape=[40, 1600, 1408],
                 num_input_features=4,
                 num_hidden_features=64 * 4,
                 ThrDNet=dict(
                     type="BiGNN",
-                    conv_inputs=[4, 16],
-                    downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'], 'filters': [16, 32]},
-                                {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'filters': [32, 32, 32]}, 
-                                {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'filters': [32, 32, 64]}, 
-                                {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'filters': [64, 64, 32]}, 
-                                ],
-                    goupers=[
-                            dict(
-                                type='GrouperDisAttention',
-                                forward_type='v1',
-                                args=dict(
-                                    radius=1.0,
-                                    nsamples=128,
-                                    mlps=[16, 32],
-                                    use_xyz=True,
-                                    bn=False,
-                                    instance_norm=False
-                                    ),
-                                maps=dict(
-                                    lr_index=3,
-                                    hr_index=0,
-                                    lr_voxel_size=(0.4, 0.4, 1.0),   
-                                    hr_voxel_size=(0.05, 0.05, 0.1),
-                                    offset=(0., -40., -3.)
-                                    )),
-                            dict(
-                                type='GrouperDisAttention',
-                                forward_type='v1',
-                                args=dict(
-                                    radius=1.0,
-                                    nsamples=32,
-                                    mlps=[32, 32],
-                                    use_xyz=True,
-                                    bn=False,
-                                    instance_norm=False
-                                    ),
-                                maps=dict(
-                                    lr_index=3,
-                                    hr_index=1,
-                                    lr_voxel_size=(0.4, 0.4, 1.0),   
-                                    hr_voxel_size=(0.1, 0.1, 0.2),
-                                    offset=(0., -40., -3.)
-                                    )),
-                            dict(
-                                grouper_type='GrouperDisAttention',
-                                forward_type='v1',
-                                args=dict(
-                                    radius=1.0,
-                                    nsamples=16,
-                                    mlps=[64, 32],
-                                    use_xyz=True,
-                                    bn=False,
-                                    instance_norm=False
-                                    ),
-                                maps=dict(
-                                    lr_index=3,
-                                    hr_index=2,
-                                    lr_voxel_size=(0.4, 0.4, 1.0),   
-                                    hr_voxel_size=(0.2, 0.2, 0.4),
-                                    offset=(0., -40., -3.)
-                                    )),  
-                            ]),
-                TwoDNet=dict(
-                    type='PCDetBEVNet2',
                     args=dict(
-                        in_features=256,
-                        concat_input=False, 
+                        conv_inputs=[4, 16],
+                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'], 'filters': [16, 32]},
+                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'filters': [32, 32, 32]}, 
+                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'filters': [32, 32, 64]}, 
+                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'filters': [64, 64, 32]}, 
+                                    ],
+                        groupers=[
+                                dict(
+                                    grouper_type='GrouperDisAttention',
+                                    forward_type='v1',
+                                    args=dict(
+                                        radius=1.0,
+                                        nsamples=128,
+                                        mlps=[16, 32],
+                                        use_xyz=True,
+                                        bn=False,
+                                        instance_norm=False
+                                        ),
+                                    maps=dict(
+                                        lr_index=3,
+                                        hr_index=0,
+                                        lr_voxel_size=(0.4, 0.4, 1.0),   
+                                        hr_voxel_size=(0.05, 0.05, 0.1),
+                                        offset=(0., -40., -3.)
+                                        )),
+                                dict(
+                                    grouper_type='GrouperDisAttention',
+                                    forward_type='v1',
+                                    args=dict(
+                                        radius=1.0,
+                                        nsamples=32,
+                                        mlps=[32, 32],
+                                        use_xyz=True,
+                                        bn=False,
+                                        instance_norm=False
+                                        ),
+                                    maps=dict(
+                                        lr_index=3,
+                                        hr_index=1,
+                                        lr_voxel_size=(0.4, 0.4, 1.0),   
+                                        hr_voxel_size=(0.1, 0.1, 0.2),
+                                        offset=(0., -40., -3.)
+                                        )),
+                                dict(
+                                    grouper_type='GrouperDisAttention',
+                                    forward_type='v1',
+                                    args=dict(
+                                        radius=1.0,
+                                        nsamples=16,
+                                        mlps=[64, 32],
+                                        use_xyz=True,
+                                        bn=False,
+                                        instance_norm=False
+                                        ),
+                                    maps=dict(
+                                        lr_index=3,
+                                        hr_index=2,
+                                        lr_voxel_size=(0.4, 0.4, 1.0),   
+                                        hr_voxel_size=(0.2, 0.2, 0.4),
+                                        offset=(0., -40., -3.)
+                                        )),  
+                                ])
+                            ),
+                TwoDNet=dict(
+                    type='PCDetBEVNet',
+                    args=dict(
                         num_input_features=256,
+                        num_filters=[128, 256],
+                        num_output_features=256,
+                        concat_input=False, 
                         layer_nums=[5, 5],
                         layer_strides=[1, 2],
-                        num_filters=[128, 256],
                         upsample_strides=[1, 2],
                         num_upsample_filters = [256, 256],
                     )
@@ -110,7 +113,6 @@ model = dict(
                             )
                     ),
                 ),
-
         )
 
 )

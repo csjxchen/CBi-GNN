@@ -65,6 +65,7 @@ def main():
         set_random_seed(args.seed)
     
     model = Detector(config.model, config.train_cfg, config.test_cfg)
+    print(model)
     dataset = build_dataset(config.data.train)
 
 if __name__ == "__main__":

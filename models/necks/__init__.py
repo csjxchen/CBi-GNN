@@ -1,3 +1,3 @@
-from cbinet.py import *
+from .cbinet import CBiNet
 
-__all__ = ['Cbinet']
+neck_models = {"CBiNet": CBiNet}

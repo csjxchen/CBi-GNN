@@ -1,7 +1,9 @@
-from models.containers.rpn import RPN
-from models import interface 
-from models import necks
-from models import rpn_heads
+from .rpn import RPN
+# import models.interfaces as interface 
+from models.interfaces import interface_models
+from models.necks import neck_models
+from models.heads.rpn_heads import rpn_heads_models 
+
 class CBIGNN(RPN):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
         super(CBIGNN, self).__init__(model_cfg, train_cfg, test_cfg, is_train=True)    
@@ -12,7 +14,7 @@ class CBIGNN(RPN):
         backbone_dict = self.model_cfg.backbone.copy() if 'backbone' in self.model_cfg.keys() else None
         if backbone_dict:
             backbone_type = backbone_dict.pop('type') 
-            self.backbone = interface[backbone_type][**backbone_dict]
+            self.backbone = interface_models[backbone_type](**backbone_dict)
         else:
             self.backbone = None
         
@@ -20,14 +22,14 @@ class CBIGNN(RPN):
         neck_dict = self.model_cfg['neck'].copy() if 'neck' in self.model_cfg.keys() else None
         if neck_dict:
             neck_type = neck_dict.pop('type') 
-            self.neck = necks[neck_type][**neck_dict]
+            self.neck = neck_models[neck_type](neck_dict)
         else: 
             self.neck = None
         # initialize head
         rpn_head_dict = self.model_cfg.bbox_head.copy() if "bbox_head" in self.model_cfg.keys() else None
         if rpn_head_dict:
             rpn_head_type = rpn_head_dict.pop('type')
-            self.rpn_head = rpn_heads[rpn_head_type](**rpn_head_dict.args)
+            self.rpn_head = rpn_heads_models[rpn_head_type](**rpn_head_dict.args)
 
     def forward_train(self, data):
         """
@@ -90,7 +92,7 @@ class CBIGNN(RPN):
                 'test_alignment_cfg':self.test_cfg.alignment
                 })
         
-        rpn_outs, alignment_outs = self.rpn_head(neck_outs)
+        rpn_outs, alignment_outs = self.rpn_head(neck_outs, is_test=True)
         
         if alignment_outs:
             results = [kitti_bbox2results(*param) for param in zip(*alignment_outs, data['img_meta'])]

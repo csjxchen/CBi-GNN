@@ -1,6 +1,4 @@
-from thrdnets import *
-from twodnets import *
-thrdnet_all = []
-twodnet_all = ['BEVNet', 'PCDetBEVNet']
-
-__all__ = thrdnet_all + twodnet_all
+from .thrdnets import BiGNN
+from .twodnets import PCDetBEVNet
+threed_models = {'BiGNN': BiGNN}
+twod_models = {'PCDetBEVNet': PCDetBEVNet}
