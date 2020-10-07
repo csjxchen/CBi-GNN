@@ -57,9 +57,8 @@ class SSDRotateHead(nn.Module):
     def init_alignment_head(self):
         if self.alignment_head_cfg:
             _alignment_head_cfg = self.alignment_head_cfg.copy()
-            _alignment_head_type = self.alignment_head_cfg.pop('type')
             _alignment_head_args = _alignment_head_cfg.args
-            self.alignment_head = alignment_head_models[_alignment_head_type](**_alignment_head_args)
+            self.alignment_head = alignment_head_models[_alignment_head_type.type](**_alignment_head_args)
         else:
             self.alignment_head = None
     

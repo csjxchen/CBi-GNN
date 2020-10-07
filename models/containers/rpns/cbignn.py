@@ -17,7 +17,6 @@ class CBIGNN(RPN):
             self.backbone = interface_models[backbone_type](**backbone_dict)
         else:
             self.backbone = None
-        
         # initialize neck
         neck_dict = self.model_cfg['neck'].copy() if 'neck' in self.model_cfg.keys() else None
         if neck_dict:
