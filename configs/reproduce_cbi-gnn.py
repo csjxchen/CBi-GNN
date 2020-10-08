@@ -264,7 +264,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/test/test_v1'
+exp_dir = '../experiments/reproduce/cbi-gnn'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
