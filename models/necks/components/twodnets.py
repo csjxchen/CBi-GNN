@@ -60,7 +60,6 @@ class BEVNet(nn.Module):
 class PCDetBEVNet(nn.Module):
     def __init__(self, args):
         super(PCDetBEVNet, self).__init__()
-        print(args)
         self._concat_input = args['concat_input']
         assert len(args['layer_strides']) == len(args['layer_nums'])
         assert len(args['num_filters']) == len(args['layer_nums'])

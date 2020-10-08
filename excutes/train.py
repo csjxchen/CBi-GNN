@@ -22,6 +22,8 @@ from mmcv import Config
 from models.containers.detector import Detector 
 from dets.datasets.build_dataset import build_dataset
 from dets.tools.utils.loader import build_dataloader
+from dets.tools.train_utils import load_params_from_file
+
 import warnings
 import logging
 from numba import NumbaWarning
@@ -81,26 +83,33 @@ def main():
     
     print("---------------------------------------initialize training members ---------------------------------------")
     model = Detector(cfg.model, cfg.train_cfg, cfg.test_cfg, is_train=True)
+    optimizer = build_optimizer(model, cfg.optimizer)
+    epoch = 0
+    accumulated_iters = 0
     if distributed:
         raise NotImplemented
     else:
         model = MMDataParallel(model, device_ids=range(cfg.gpus)).cuda()
         if args.checkpoint:
-            load_params_from_file(model, args.checkpoint)        
+            epoch, accumulated_iters, optimizer_state = load_params_from_file(model, args.checkpoint)        
+            optimizer.load_state_dict(optimizer_state)
+
     # print(model)
-    optimizer = build_optimizer(model, cfg.optimizer)
     dataset = build_dataset(cfg.data.train)    
     train_loader = build_dataloader(
                     dataset,
                     cfg.data.imgs_per_gpu,
                     cfg.data.workers_per_gpu,
                     dist=distributed)
-    start_epoch = it = 0
+    
+    start_epoch = epoch
+    it = accumulated_iters
     last_epoch = -1
     lr_scheduler, lr_warmup_scheduler = build_scheduler(
         optimizer, total_iters_each_epoch=len(train_loader), total_epochs=cfg.total_epochs,
         last_epoch=last_epoch, optim_cfg=cfg.optimizer, lr_cfg=cfg.lr_config
     )
+    
     logger.info('---------------------------------Start training---------------------------------')
     train_model(
         model,

@@ -123,6 +123,7 @@ def model_state_to_cpu(model_state):
 
 def checkpoint_state(model=None, optimizer=None, epoch=None, it=None):
     optim_state = optimizer.state_dict() if optimizer is not None else None
+    
     if model is not None:
         if isinstance(model, torch.nn.parallel.DistributedDataParallel):
             model_state = model_state_to_cpu(model.module.state_dict())
@@ -131,13 +132,7 @@ def checkpoint_state(model=None, optimizer=None, epoch=None, it=None):
     else:
         model_state = None
 
-    try:
-        import pcdet
-        version = 'pcdet+' + pcdet.__version__
-    except:
-        version = 'none'
-
-    return {'epoch': epoch, 'it': it, 'model_state': model_state, 'optimizer_state': optim_state, 'version': version}
+    return {'epoch': epoch, 'it': it, 'model_state': model_state, 'optimizer_state': optim_state}
 
 
 def save_checkpoint(state, filename='checkpoint'):
@@ -157,8 +152,12 @@ def load_params_from_file(model, filename, to_cpu=False):
        print('==> Loading parameters from checkpoint %s to %s' % (filename, 'CPU' if to_cpu else 'GPU'))
        loc_type = torch.device('cpu') if to_cpu else None
        checkpoint = torch.load(filename, map_location=loc_type)
+       # {'epoch': epoch, 'it': it, 'model_state': model_state, 'optimizer_state': optim_state}
        model_state_disk = checkpoint['model_state']
-        
+       optimizer_state = checkpoint['optimizer_state']
+       epoch = checkpoint['epoch']
+       accumulated_iters = checkpoint['it']
+       
        if 'version' in checkpoint:
            print('==> Checkpoint trained from version: %s' % checkpoint['version'])
 
@@ -167,13 +166,13 @@ def load_params_from_file(model, filename, to_cpu=False):
            if key in model.state_dict() and model.state_dict()[key].shape == model_state_disk[key].shape:
                update_model_state[key] = val
                # logger.info('Update weight %s: %s' % (key, str(val.shape)))
-
+       
        state_dict = model.state_dict()
        state_dict.update(update_model_state)
        model.load_state_dict(state_dict)
-
+       
        for key in state_dict:
            if key not in update_model_state:
                print('Not updated weight %s: %s' % (key, str(state_dict[key].shape)))
-
        print('==> Done (loaded %d/%d)' % (len(update_model_state), len(model.state_dict())))
+       return  epoch, accumulated_iters, optimizer_state

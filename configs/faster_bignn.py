@@ -13,18 +13,18 @@ model = dict(
                 num_input_features=4,
                 num_hidden_features=64 * 4,
                 ThrDNet=dict(
-                    type="BiGNN",
+                    type="BiGNN_Submanifold",
                     args=dict(
                         conv_inputs=[4, 16],
-                        downsample_layers=[{'types':['subm'], 'indice_keys': ['dsubm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['dspconv2', 'dsubm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['dspconv3', 'dsubm3'], 'paddings': [[1], [1]], 'strides':[2, 1], 'filters': [32, 32, 64]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['dspconv4', 'dsubm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2, 1], 'filters': [64, 64, 32]}],
+                        # downsample_layers=[{'types':['subm'], 'indice_keys': ['dsubm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
+                        #             {'types':['spconv', 'subm'], 'indice_keys': ['dspconv2', 'dsubm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
+                        #             {'types':['spconv', 'subm'], 'indice_keys': ['dspconv3', 'dsubm3'], 'paddings': [[1], [1]], 'strides':[2, 1], 'filters': [32, 32, 64]}, 
+                        #             {'types':['spconv', 'subm'], 'indice_keys': ['dspconv4', 'dsubm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2, 1], 'filters': [64, 64, 32]}],
                         
                         subm_layers=[{'types':['subm'], 'indice_keys': ['sub_subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
                                     {'types':['spconv', 'subm'], 'indice_keys': ['sub_spconv2', 'sub_subm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
-                                    {'types':['subm'], 'indice_keys': ['sub_subm3'], 'paddings': [[1]], 'strides':[2], 'filters': [32, 32, 64]}, 
-                                    {'types':['subm'], 'indice_keys': ['sub_spconv4', 'sub_subm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2], 'filters': [64, 64, 32]}]
+                                    {'types':['subm'], 'indice_keys': ['sub_subm3'], 'paddings': [[1]], 'strides':[2], 'filters': [32, 64]}, 
+                                    {'types':['subm'], 'indice_keys': ['sub_subm4'], 'paddings': [[1]], 'strides':[2], 'filters': [64, 32]}],
                         
                         groupers=[
                                 dict(
@@ -32,8 +32,8 @@ model = dict(
                                     forward_type='v1',
                                     args=dict(
                                         radius=1.0,
-                                        nsamples=128,
-                                        mlps=[32, 32],``
+                                        nsamples=64,
+                                        mlps=[32, 32],
                                         use_xyz=True,
                                         bn=False,
                                         instance_norm=False
@@ -270,7 +270,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbi-gnn'
+exp_dir = '../experiments/reproduce/faster_bignn'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

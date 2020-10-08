@@ -5,7 +5,9 @@ def post_act_block(in_channels, out_channels, kernel_size, indice_key, stride=1,
                     conv_type='subm', norm_fn=None):
     if conv_type == 'subm':
         m = spconv.SparseSequential(
-            spconv.SubMConv3d(in_channels, out_channels, kernel_size, bias=False, indice_key=indice_key),
+            spconv.SubMConv3d(in_channels, out_channels, kernel_size, stride=stride, bias=False, indice_key=indice_key),
+            # spconv.SubMConv3d(in_channels, out_channels, kernel_size, bias=False, indice_key=indice_key),
+            
             norm_fn(out_channels),
             nn.ReLU(),
         )
@@ -28,10 +30,10 @@ def post_act_block(in_channels, out_channels, kernel_size, indice_key, stride=1,
         raise NotImplementedError
     return m
 
-def parse_spconv_cfg(downsample_layer_cfgs):
+def parse_spconv_cfg(downsample_layer_cfgs, norm_fn):
     layers = nn.ModuleList()
 
-    for layer_dict in downsample_layer_cfgsdownsample_layers: 
+    for layer_dict in downsample_layer_cfgs: 
         # for l in layers:
         assert len(layer_dict['types']) == len(layer_dict['indice_keys']), f"{len(layer_dict['types'])} == {len(layer_dict['indice_keys'])}?"
         assert len(layer_dict['types']) == (len(layer_dict['filters'])-1), f"{len(layer_dict['types'])} == {len(layer_dict['filters'])-1}?"
@@ -48,7 +50,7 @@ def parse_spconv_cfg(downsample_layer_cfgs):
                                     conv_type=layer_dict['types'][i],
                                     indice_key=layer_dict['indice_keys'][i])
                                 )
-        layers.append(_sequentials)
+        layers.append(spconv.SparseSequential(*_sequentials))
     return layers
 def structured_forward(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset):
         lrx = feats[lr_index]
