@@ -14,7 +14,7 @@ from functools import partial
 # from ..utils import change_default_args, Sequential
 # from mmdet.ops.pointnet2.layers_utils import GrouperForGrids, GrouperxyzForGrids
 from .alignment_head import AlignmentHead
-from models.heads.head_utils import gen_sample_grid
+from models.heads.head_utils import gen_sample_grid, bilinear_interpolate_torch_gridsample_rep_2
 class NonlocalPart(AlignmentHead):
     def __init__(self, grid_offsets, featmap_stride, in_channels, channels=32, num_class=1, num_parts=49, window_size=(4, 7)):
         super(NonlocalPart, self).__init__()

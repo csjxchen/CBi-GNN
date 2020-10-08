@@ -45,11 +45,12 @@ class RPN(nn.Module):
                 ret[key] = torch.stack(elems, dim=0)
         return ret
     # @abstractmethod
+    
     def forward(self, data):
         if self.is_train:
-            self.forward_train(data)
+            return self.forward_train(data)
         else:
-            self.forward_test(data)
+            return self.forward_test(data)
 
     @abstractmethod
     def forward_train(self, data):

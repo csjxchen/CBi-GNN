@@ -136,16 +136,16 @@ train_cfg = dict(
         allowed_border=0,
         pos_weight=-1,
         smoothl1_beta=1 / 9.0,
-        debug=False),
-    alignment=dict(
-        weight=1.0,
-        assigner=dict(
-            pos_iou_thr=0.7,
-            neg_iou_thr=0.7,
-            min_pos_iou=0.7,
-            ignore_iof_thr=-1,
-            similarity_fn ='RotateIou3dSimilarity'
-        )
+        debug=False,
+        alignment=dict(
+            weight=1.0,
+            assigner=dict(
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.7,
+                min_pos_iou=0.7,
+                ignore_iof_thr=-1,
+                similarity_fn ='RotateIou3dSimilarity')
+            )
     )
 )
 
@@ -155,10 +155,13 @@ test_cfg = dict(
         nms_pre=2000,
         nms_post=100,
         nms_thr=0.7,
-        min_bbox_size=0
-    ),
-    alignment=dict(
-        score_thr=0.3, nms=dict(type='nms', iou_thr=0.1), max_per_img=100)
+        min_bbox_size=0,
+        alignment=dict(
+            score_thr=0.3, 
+            nms=dict(type='nms', iou_thr=0.1), 
+            max_per_img=100)
+    )
+   
 )
 # dataset settings
 dataset_type = 'KittiLiDAR'

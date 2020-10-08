@@ -68,13 +68,13 @@ class CBIGNN(RPN):
         #                     ])
         rpn_outs, alignment_outs = self.rpn_head(neck_outs)
         # achieve loss for rpn
-        rpn_loss_inputs = rpn_outs + (data['gt_bboxes'], data['gt_labels'],  data['anchors'], data['anchors_mask'], self.train_cfg.rpn) 
-        rpn_losses = self.rpn_head.loss(**rpn_loss_inputs)
+        rpn_loss_inputs = rpn_outs + (data['gt_bboxes'], data['gt_labels'],  data['anchors'], data['anchors_mask'], self.train_cfg) 
+        rpn_losses = self.rpn_head.loss(*rpn_loss_inputs)
         losses.update(rpn_losses)
-
+        
         if alignment_outs:
             refine_loss_inputs =  alignment_outs + (data['gt_bboxes'], data['gt_labels'], self.train_cfg.alignment)
-            refine_losses = self.extra_head.loss(*refine_loss_inputs)
+            refine_losses = self.rpn_head.alignment_head.loss(*refine_loss_inputs)
             losses.update(refine_losses)
         return losses
     def forward_test(self, data):

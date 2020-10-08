@@ -160,5 +160,5 @@ def bilinear_interpolate_torch_gridsample_rep_2(image, samples_x, samples_y, par
     samples[:, :, :, 0] = (samples[:, :, :, 0] / (W - 1))  # normalize to between 0 and 1
     samples[:, :, :, 1] = (samples[:, :, :, 1] / (H - 1))  # normalize to between 0 and 1
     samples = samples * 2 - 1                              # normalize to between -1 and 1
-    # C, ch, N, 1
+    # parts, ch, N, 1
     return torch.nn.functional.grid_sample(image, samples)

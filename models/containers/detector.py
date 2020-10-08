@@ -6,7 +6,8 @@ class Detector(nn.Module):
     def __init__(self, 
                 model_cfg,
                 train_cfg, 
-                test_cfg, is_train=True
+                test_cfg, 
+                is_train=True
                 ):
         super(Detector, self).__init__()
         """Container for generalized detector
@@ -16,6 +17,8 @@ class Detector(nn.Module):
             test_cfg (dict): [description]
         """
         self.is_train = is_train
+        self.rpn = None
+        self.rfn = None
         if "rpn" in model_cfg.keys():
             rpn_dict = model_cfg.rpn.copy()
             rpn_type = rpn_dict.pop('type')

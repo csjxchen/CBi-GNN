@@ -12,12 +12,13 @@ import dets.tools.bbox3d.box_coders as boxCoders
 from dets.tools.post_processing.bbox_nms import rotate_nms_torch
 from functools import partial
 from abc import ABCMeta, abstractmethod
-
+from models.heads.head_utils import second_box_encode, second_box_decode
 from models.utils import change_default_args, Sequential
 # from mmdet.ops.pointnet2.layers_utils import GrouperForGrids, GrouperxyzForGrids
 
 class AlignmentHead(nn.Module):
     def __init__(self):
+        super(AlignmentHead, self).__init__()
         pass
     def forward(self, x, guided_anchors, is_test=False):
         if is_test:
