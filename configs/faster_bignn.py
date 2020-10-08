@@ -23,7 +23,7 @@ model = dict(
                         
                         subm_layers=[{'types':['subm'], 'indice_keys': ['sub_subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
                                     {'types':['spconv', 'subm'], 'indice_keys': ['sub_spconv2', 'sub_subm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
-                                    {'types':['subm'], 'indice_keys': ['sub_subm3'], 'paddings': [[1]], 'strides':[2], 'filters': [32, 64]}, 
+                                    {'types':['subm'], 'indice_keys': ['sub_subm3'], 'paddings': [[1]], 'strides':[2], 'filters': [32, 32, 64]}, 
                                     {'types':['subm'], 'indice_keys': ['sub_spconv4', 'sub_subm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2], 'filters': [64, 64, 32]}]
                         
                         groupers=[
