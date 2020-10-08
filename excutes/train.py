@@ -22,6 +22,14 @@ from mmcv import Config
 from models.containers.detector import Detector 
 from dets.datasets.build_dataset import build_dataset
 from dets.tools.utils.loader import build_dataloader
+import warnings
+import logging
+from numba import NumbaWarning
+
+warnings.filterwarnings("ignore", category=NumbaWarning)
+
+numba_logger = logging.getLogger('numba')
+numba_logger.setLevel(logging.WARNING)
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument("config", help='train config file path')
@@ -112,7 +120,5 @@ def main():
         log_interval = cfg.log_config.interval
     )
     logger.info('---------------------------------End training---------------------------------')
-
-
 if __name__ == "__main__":
     main()

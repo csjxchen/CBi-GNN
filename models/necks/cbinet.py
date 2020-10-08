@@ -24,8 +24,7 @@ class CBiNet(nn.Module):
         self.sparse_shape = self.model_cfg['output_shape']
         ThrDNet_cfg = self.model_cfg.ThrDNet
         # _thrdnet_args = ThrDNet_cfg.copy()
-        # _thrdnet_type = _thrdnet_args.pop('type') 
-        
+        # _thrdnet_type = _thrdnet_args.pop('type')     
         self.Thrdnet = threed_models[ThrDNet_cfg.type](ThrDNet_cfg.args)
         TwoDNet_cfg = self.model_cfg.TwoDNet
         # _twodnet_args = TwoDNet_cfg.copy()

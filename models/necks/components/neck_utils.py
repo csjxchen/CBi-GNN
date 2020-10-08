@@ -28,6 +28,28 @@ def post_act_block(in_channels, out_channels, kernel_size, indice_key, stride=1,
         raise NotImplementedError
     return m
 
+def parse_spconv_cfg(downsample_layer_cfgs):
+    layers = nn.ModuleList()
+
+    for layer_dict in downsample_layer_cfgsdownsample_layers: 
+        # for l in layers:
+        assert len(layer_dict['types']) == len(layer_dict['indice_keys']), f"{len(layer_dict['types'])} == {len(layer_dict['indice_keys'])}?"
+        assert len(layer_dict['types']) == (len(layer_dict['filters'])-1), f"{len(layer_dict['types'])} == {len(layer_dict['filters'])-1}?"
+        _sequentials = []
+        
+        for i in range(len(layer_dict['types'])):
+            _sequentials.append(post_act_block(
+                                    layer_dict['filters'][i], 
+                                    layer_dict['filters'][i + 1], 
+                                    3, 
+                                    stride=layer_dict['strides'][i],
+                                    norm_fn=norm_fn, 
+                                    padding=layer_dict['paddings'][i] if len(layer_dict['paddings'][i]) > 1 else layer_dict['paddings'][i][0], 
+                                    conv_type=layer_dict['types'][i],
+                                    indice_key=layer_dict['indice_keys'][i])
+                                )
+        layers.append(_sequentials)
+    return layers
 def structured_forward(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset):
         lrx = feats[lr_index]
         hrx = feats[hr_index]
