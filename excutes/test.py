@@ -145,7 +145,7 @@ def main():
     
     if args.gpus == 1:
         model = Detector(cfg.model, cfg.train_cfg, cfg.test_cfg, is_train=False)
-        model = MMDataParallel(model, device_ids=[0]).cuda()
+        model = MMDataParallel(model, device_ids=[0])
         epoch, accumulated_iters, optimizer_state = load_params_from_file(model, args.checkpoint)
         if args.save_to_file:
             saved_dir = os.path.join(cfg.exp_dir, f"{epoch}_outs")

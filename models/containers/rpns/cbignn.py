@@ -3,7 +3,7 @@ from .rpn import RPN
 from models.interfaces import interface_models
 from models.necks import neck_models
 from models.heads.rpn_heads import rpn_heads_models 
-
+from dets.tools.bbox.transforms import kitti_bbox2results
 class CBIGNN(RPN):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
         super(CBIGNN, self).__init__(model_cfg, train_cfg, test_cfg, is_train=is_train)    
@@ -80,7 +80,13 @@ class CBIGNN(RPN):
     
     def forward_test(self, data):
 
-        batch_size =  len(data['img_meta'])
+        img_meta = data.pop('img_meta')
+        
+        img = data.pop('img')
+        
+        batch_size =  len(img_meta)
+        
+        data = self.merge_second_batch(data)
         
         voxel_x = self.backbone(features=data['voxels'])
         
@@ -89,8 +95,8 @@ class CBIGNN(RPN):
         # prepare data for rpn_head
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
-                "gt_bboxes": gt_bboxes,
-                "anchors":  anchors,
+                "gt_bboxes": data['gt_bboxes'],
+                "anchors":  data['anchors'],
                 "batch_size": batch_size,
                 'test_alignment_cfg':self.test_cfg.alignment
                 })
@@ -98,10 +104,10 @@ class CBIGNN(RPN):
         rpn_outs, alignment_outs = self.rpn_head(neck_outs, is_test=True)
         
         if alignment_outs:
-            results = [kitti_bbox2results(*param) for param in zip(*alignment_outs, data['img_meta'])]
+            results = [kitti_bbox2results(*param) for param in zip(*alignment_outs, img_meta)]
         else:
             det_bboxes, det_scores = self.rpn_head.get_guided_dets(*rpn_outs, data['anchors'], data['anchors_mask'], None, self.test_cfg, thr=0.3)
             
-            results = [kitti_bbox2results(*param) for param in zip(det_bboxes, det_scores, data['img_meta'])]
+            results = [kitti_bbox2results(*param) for param in zip(det_bboxes, det_scores, img_meta)]
 
         return results
