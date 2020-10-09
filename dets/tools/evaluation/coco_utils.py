@@ -4,8 +4,6 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
 from .recall import eval_recalls
-
-
 def coco_eval(result_file, result_types, coco, max_dets=(100, 300, 1000)):
     for res_type in result_types:
         assert res_type in [

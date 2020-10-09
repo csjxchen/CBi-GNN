@@ -1,6 +1,6 @@
 import numpy as np
 import pathlib
-from mmdet.core.bbox3d.geometry import (center_to_corner_box2d,\
+from dets.tools.bbox3d.geometry import (center_to_corner_box2d,\
                                         center_to_corner_box3d,\
                                         box2d_to_corner_jit,\
                                         points_in_convex_polygon_3d_jit,\
@@ -158,24 +158,21 @@ class PointAugmentor:
             for info in db_infos:
                 if info["num_points_in_gt"] >= min_num_points:
                     filtered_infos.append(info)
+            
             db_infos = filtered_infos
-
             new_db_infos = [
                 info for info in db_infos
                 if info["difficulty"] not in removed_difficulties
             ]
-
             print("After filter database:")
             print(f"load {len(new_db_infos)} {sample_class} database infos")
-
             self._samplers.append(BatchSampler(new_db_infos, sample_class))
-
         self.root_path = root_path
         # self._db_infos = new_db_infos
         self._sample_classes = sample_classes
         self._sample_max_num = sample_max_num
         # self._sampler = BatchSampler(self._db_infos, sample_class)
-
+        
         self._global_rot_range = global_rot_range
         self._gt_rot_range = gt_rot_range
         self._center_noise_std = center_noise_std
@@ -183,6 +180,21 @@ class PointAugmentor:
         self._max_scale = scale_range[1]
 
     def sample_all(self, gt_boxes, gt_types):
+
+        """
+        Summary:
+            first: set the max sample number
+            second: randomly sample boxes from the save db_infos
+            finally: check collisions between sampled boxes and existing boxes   
+        Args:
+            gt_boxes (np.array): the original boxes in current scene
+            gt_types (list(str)): the corresponding gt_types for the original gt_boxes
+
+        Returns:
+            sampled_boxes:
+            sampled_boxes_class_names:
+            
+        """
         avoid_coll_boxes = gt_boxes
 
         sampled = []
@@ -219,11 +231,11 @@ class PointAugmentor:
                     str(pathlib.Path(self.root_path) / info["path"]),
                     dtype=np.float32)
                 s_points = s_points.reshape([-1, 4])
-
+                # transform the normalized s_points into the absoluted coordinates
                 s_points[:, :3] += info["box3d_lidar"][:3]
                 s_points_list.append(s_points)
                 sampled_gt_types.append(info['name'])
-
+            
             return sampled_gt_boxes.astype(np.float32), sampled_gt_types, np.concatenate(s_points_list, axis=0)
 
         else:
@@ -299,7 +311,7 @@ class PointAugmentor:
             points: [M, 4], point cloud in lidar.
         """
         num_boxes = gt_boxes.shape[0]
-
+        
         if valid_mask is None:
             valid_mask = np.ones((num_boxes,), dtype=np.bool_)
         center_noise_std = np.array(self._center_noise_std, dtype=gt_boxes.dtype)

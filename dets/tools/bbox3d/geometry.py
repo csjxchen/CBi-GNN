@@ -39,7 +39,7 @@ def box_camera_to_lidar(data, r_rect, velo2cam):
     r = data[:, 6:7]
     xyz_lidar = camera_to_lidar(xyz, r_rect, velo2cam)
     return np.concatenate([xyz_lidar, w, l, h, r], axis=1)
-
+    
 def camera_to_lidar(points, r_rect, velo2cam):
     points_shape = list(points.shape[0:-1])
     if points.shape[-1] == 3:
@@ -171,7 +171,6 @@ def is_line_segment_cross(lines1, lines2):
     return np.logical_and(
         _ccw(A, C, D) != _ccw(B, C, D),
         _ccw(A, B, C) != _ccw(A, B, D))
-
 
 @numba.jit(nopython=False)
 def surface_equ_3d_jit(polygon_surfaces):
