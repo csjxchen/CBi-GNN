@@ -21,7 +21,14 @@ from dets.tools.train_utils import load_params_from_file
 from dets.tools.utils import utils
 from dets.datasets.build_dataset import build_dataset
 import pathlib
+import warnings
+import logging
+from numba import NumbaWarning
 
+warnings.filterwarnings("ignore", category=NumbaWarning)
+
+numba_logger = logging.getLogger('numba')
+numba_logger.setLevel(logging.WARNING)
 def single_test(model, data_loader, saveto=None, class_names=['Car'], save_ious_file=None):
     template = '{} ' + ' '.join(['{:.4f}' for _ in range(15)]) + '\n'
     if saveto is not None:
@@ -168,7 +175,7 @@ def main():
         gt_annos = kitti.get_label_annos(dataset.label_prefix, dataset.sample_ids)
         result = get_official_eval_result(gt_annos, outputs, current_classes=class_names)
         print(result)
-        print(f"{cfg_name}:{checkpoint_n}\n{result}", file=result_file)
+        print(f"{cfg_name}:{epoch}\n{result}", file=result_file)
         result = get_official_eval_result_v1(gt_annos, outputs, current_class=class_names[0])
         print(result)
         print(result, file=result_file)

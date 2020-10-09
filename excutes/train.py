@@ -1,6 +1,6 @@
 from __future__ import division
-import warnings
-warnings.filterwarnings('ignore')
+# import warnings
+# warnings.filterwarnings('ignore')
 # import __init__path
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../'))
