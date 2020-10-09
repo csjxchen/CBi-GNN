@@ -163,7 +163,7 @@ def main():
     
     
     if not args.test: 
-        result_file = open(pathlib.Path(cfg.work_dir) / f'result_{checkpoint_n}.txt', 'w')
+        result_file = open(pathlib.Path(cfg.exp_dir) / f'result_{epoch}_outs.txt', 'w')
         # kitti evaluation
         gt_annos = kitti.get_label_annos(dataset.label_prefix, dataset.sample_ids)
         result = get_official_eval_result(gt_annos, outputs, current_classes=class_names)
