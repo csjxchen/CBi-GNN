@@ -6,7 +6,7 @@ from models.heads.rpn_heads import rpn_heads_models
 
 class CBIGNN(RPN):
     def __init__(self, model_cfg, train_cfg, test_cfg, is_train=True):
-        super(CBIGNN, self).__init__(model_cfg, train_cfg, test_cfg, is_train=True)    
+        super(CBIGNN, self).__init__(model_cfg, train_cfg, test_cfg, is_train=is_train)    
         self.init_architecture()
         
     def init_architecture(self):
@@ -29,7 +29,7 @@ class CBIGNN(RPN):
         if rpn_head_dict:
             rpn_head_type = rpn_head_dict.pop('type')
             self.rpn_head = rpn_heads_models[rpn_head_type](**rpn_head_dict.args)
-
+    
     def forward_train(self, data):
         """
         Args:
@@ -77,6 +77,7 @@ class CBIGNN(RPN):
             refine_losses = self.rpn_head.alignment_head.loss(*refine_loss_inputs)
             losses.update(refine_losses)
         return losses
+    
     def forward_test(self, data):
 
         batch_size =  len(data['img_meta'])

@@ -77,6 +77,7 @@ def train_one_epoch(model, optimizer, train_loader, lr_scheduler, lr_warmup_sche
 def train_model(model, optimizer, train_loader, lr_scheduler, optim_cfg,
                 start_epoch, total_epochs, start_iter, rank, logger, ckpt_save_dir,
                 lr_warmup_scheduler=None, ckpt_save_interval=1, max_ckpt_save_num=50, log_interval=20):
+    
     accumulated_iter = start_iter
 
     log_buffer = LogBuffer()

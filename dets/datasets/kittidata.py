@@ -61,9 +61,9 @@ class KittiLiDAR(Dataset):
 
     def auxiliary_tools(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
         # give dict args 
-        self.augmentor = obj_from_dict(augmentor, point_augmentor)
-        self.generator = obj_from_dict(generator, voxel_generator)
-        self.target_encoder = obj_from_dict(target_encoder, bbox3d_target) if target_encoder is not None else None
+        self.augmentor = obj_from_dict(augmentor, point_augmentor) if augmentor else None
+        self.generator = obj_from_dict(generator, voxel_generator) if generator else None
+        self.target_encoder = obj_from_dict(target_encoder, bbox3d_target) if target_encoder else None
         self.out_size_factor = out_size_factor
         self.anchor_area_threshold = anchor_area_threshold
         # anchor
@@ -72,7 +72,7 @@ class KittiLiDAR(Dataset):
                             z
                             |  x
                             | /
-                        y___|/
+                    y_______|/
             '''
             feature_map_size = self.generator.grid_size[:2] // self.out_size_factor
             feature_map_size = [*feature_map_size, 1][::-1]
@@ -242,7 +242,6 @@ class KittiLiDAR(Dataset):
         if self.with_label:
             objects = read_label(osp.join(self.label_prefix, '%06d.txt' % sample_id))
             gt_bboxes = [obj.box3d for obj in objects if obj.type in self.class_names]
-
             if len(gt_bboxes) != 0:
                 gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
                 gt_labels = np.ones(len(gt_bboxes), dtype=np.int64)
@@ -260,11 +259,11 @@ class KittiLiDAR(Dataset):
 
         data = dict(
             img=to_tensor(img),
-            img_meta=img_meta
+            img_meta=DC(img_meta, cpu_only=True)
         )
         
         if self.anchors is not None:
-            data['anchors'] = to_tensor(self.anchors.astype(np.float32))
+            data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32)))
 
         if self.with_mask:
             NotImplemented
@@ -283,9 +282,11 @@ class KittiLiDAR(Dataset):
                 voxel_size[::-1], dtype=np.float32)).astype(np.int32)
             num_points = np.ones(len(keep)).astype(np.int32)
 
-            data['voxels'] = to_tensor(voxels.astype(np.float32))
-            data['coordinates'] = to_tensor(coordinates)
-            data['num_points'] = to_tensor(num_points)
+
+            data['voxels'] = DC(to_tensor(voxels.astype(np.float32)))
+            data['coordinates'] = DC(to_tensor(coordinates))
+            data['num_points'] = DC(to_tensor(num_points))
+
             
             if self.anchor_area_threshold >= 0 and self.anchors is not None :
                 dense_voxel_map = sparse_sum_for_anchors_mask(
@@ -296,20 +297,20 @@ class KittiLiDAR(Dataset):
                     anchors_area = fused_get_anchors_area(
                         dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
                     anchors_mask = anchors_area > self.anchor_area_threshold
-                    data['anchors_mask'] =  to_tensor(anchors_mask.astype(np.uint8))
+                    data['anchors_mask'] =  DC(to_tensor(anchors_mask.astype(np.bool)))
                 else:
                     N = self.anchors_bv.shape[0]
                     anchors_area = np.ones((N), dtype=np.float32) + 10
                     anchors_mask = anchors_area > self.anchor_area_threshold
                     # print(N, anchors_mask.sum())
-                    data['anchors_mask'] = to_tensor(anchors_mask.astype(np.uint8))
+                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.bool)))
 
         if self.with_label:
-            data['gt_labels'] = to_tensor(gt_labels)
-            data['gt_bboxes'] = to_tensor(gt_bboxes)
+            data['gt_labels'] = DC(to_tensor(gt_labels), cpu_only=True)
+            data['gt_bboxes'] = DC(to_tensor(gt_bboxes), cpu_only=True)
         else:
-            data['gt_labels'] = None
-            data['gt_bboxes'] = None
+            data['gt_labels'] = DC(None, cpu_only=True)
+            data['gt_bboxes'] = DC(None, cpu_only=True)
         
         return data
     

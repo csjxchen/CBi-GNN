@@ -217,10 +217,10 @@ data = dict(
 
     val=dict(
         type=dataset_type,
-        root=data_root + 'testing/',
-        ann_file=data_root + '../ImageSets/test.txt',
+        root=data_root + 'training/',
+        ann_file=data_root + '../ImageSets/val.txt',
         img_prefix=None,
-        img_scale=(1242, 375),
+        # img_scale=(1242, 375),
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
         flip_ratio=0,
