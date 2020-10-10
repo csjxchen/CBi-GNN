@@ -1,6 +1,7 @@
 import spconv
 import torch
 import torch.nn as nn
+
 def post_act_block(in_channels, out_channels, kernel_size, indice_key, stride=1, padding=0,
                     conv_type='subm', norm_fn=None):
     if conv_type == 'subm':
