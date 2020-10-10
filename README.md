@@ -60,5 +60,5 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 
 ## Based Framework
 
-- [X] MMDet
+- [X] MMCV
 - [X] PytorchLightning
