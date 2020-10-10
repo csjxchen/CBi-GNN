@@ -5,7 +5,7 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 
 ## Requirements
 1. [spconv](https://github.com/traveller59/spconv)
-2. pytorch > 1.3
+2. pytorch >= 1.1
 ## Installation
 1. Follow the instruction in [spconv](https://github.com/traveller59/spconv) 
 2. `pip install -r requirements.txt`
