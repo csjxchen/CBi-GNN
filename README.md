@@ -47,7 +47,13 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 ## Models
 
 - [X] CBi-GNN
-- [ ] SECOND
+- [X] SECOND
 - [ ] PointPillar
 - [ ] PartA^2
 - [ ] PV-RCNN
+
+## Datasets
+
+- [X] Kitti
+- [ ] Waymo
+- [ ] NuScenes
