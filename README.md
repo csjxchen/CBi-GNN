@@ -9,9 +9,9 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 ## Installation
 1. Follow the instruction in [spconv](https://github.com/traveller59/spconv) 
 2. `pip install -r requirements.txt`
-3. build iou3d `cd mmdet/ops/iou3d && sh install.sh`
-3. build pointnet2 `cd mmdet/ops/pointnet2 && sh install.sh`
-3. build points_op `cd mmdet/ops/points_op && sh install.sh`
+3. build iou3d `cd dets/ops/iou3d && sh install.sh`
+3. build pointnet2 `cd dets/ops/pointnet2 && sh install.sh`
+3. build points_op `cd dets/ops/points_op && sh install.sh`
 
 ## Usage
 ### Inference
