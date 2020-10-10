@@ -28,7 +28,7 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 ## Benchmark
 |  Metrics |  Easy | Moderate |  Hard |
 |:--------:|:-----:|:--------:|:-----:|
-| 11recall | 90.26 |   79.83  | 78.45 |
-| 40recall | 93.36 |   84.35  | 81.15 |
+| recall@11 | 90.26 |   79.83  | 78.45 |
+| recall@40 | 93.36 |   84.35  | 81.15 |
 
 
