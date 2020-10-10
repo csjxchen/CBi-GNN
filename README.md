@@ -1,6 +1,8 @@
 # CBi-GNN
 CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 
+ ![2](readme/fig2.jpg) 
+
 ## Requirements
 1. [spconv](https://github.com/traveller59/spconv)
 2. pytorch > 1.3
@@ -20,10 +22,9 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 ### Train
 - `cd excutes && python train.py ../configs/default.py --gpus=1
 `
-## Result
-- ![1](readme/fig1.jpg)
-- ![2](readme/fig2.jpg)
-- ![benchmark](readme/benchmark.png)
+## Motivation
+![1](readme/fig1.jpg)
+
 ## Benchmark
 |  Metrics |  Easy | Moderate |  Hard |
 |:--------:|:-----:|:--------:|:-----:|
