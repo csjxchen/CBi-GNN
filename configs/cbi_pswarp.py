@@ -103,7 +103,7 @@ model = dict(
                     use_direction_classifier=True,
                     box_code_size=7,
                     alignment_head_cfg=dict(
-                        type='NonlocalPart',
+                        type='PSWarpHead',
                         args=dict(
                             grid_offsets = (0., 40.),
                             featmap_stride=.4,
@@ -266,7 +266,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbi-gnn'
+exp_dir = '../experiments/reproduce/cbi_gnn_pswarp'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

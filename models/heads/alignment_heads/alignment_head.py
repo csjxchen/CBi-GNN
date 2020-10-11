@@ -37,13 +37,13 @@ class AlignmentHead(nn.Module):
     def loss(self, cls_preds, anchors, gt_bboxes, gt_labels, cfg):
         batch_size = len(anchors)
         labels, targets, ious = multi_apply(create_target_torch,
-                                            anchors, gt_bboxes,
-                                            (None,) * batch_size,
-                                            gt_labels,
-                                            similarity_fn=getattr(iou3d_utils, cfg.assigner.similarity_fn)(),
-                                            box_encoding_fn=second_box_encode,
-                                            matched_threshold=cfg.assigner.pos_iou_thr,
-                                            unmatched_threshold=cfg.assigner.neg_iou_thr)
+                                anchors, gt_bboxes,
+                                (None,) * batch_size,
+                                gt_labels,
+                                similarity_fn=getattr(iou3d_utils, cfg.assigner.similarity_fn)(),
+                                box_encoding_fn=second_box_encode,
+                                matched_threshold=cfg.assigner.pos_iou_thr,
+                                unmatched_threshold=cfg.assigner.neg_iou_thr)
 
         labels = torch.cat(labels,).unsqueeze_(1)
 

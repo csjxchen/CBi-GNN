@@ -1,2 +1,4 @@
 from .nlp_head import NonlocalPart
-alignment_head_models = {"NonlocalPart": NonlocalPart}
+from .pswarp import PSWarpHead
+alignment_head_models = {"NonlocalPart": NonlocalPart, 
+                        'PSWarpHead': PSWarpHead}
