@@ -1,5 +1,5 @@
-import numpy as np
 import numba
+import numpy as np
 
 def get_frustum(bbox_image, C, near_clip=0.001, far_clip=100):
     fku = C[0, 0]
