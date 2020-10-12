@@ -4,7 +4,7 @@ import glob
 from mmcv.runner.log_buffer import LogBuffer
 from torch.nn.utils import clip_grad_norm_
 from collections import OrderedDict
-
+import tqdm
 def parse_losses(losses):
     log_vars = OrderedDict()
     for loss_name, loss_value in losses.items():
@@ -35,12 +35,23 @@ def batch_processor(model, data):
 
     return outputs
 
-def train_one_epoch(model, optimizer, train_loader, lr_scheduler, lr_warmup_scheduler, accumulated_iter,
+def train_one_epoch(model, optimizer, train_loader, tbar, lr_scheduler, lr_warmup_scheduler, accumulated_iter,
                     train_epoch, optim_cfg, rank, logger, log_buffer, log_interval):
-
-    for i, data_batch in enumerate(train_loader):
-        # if i > 1:
-            # break
+    # Bar = progressbar.ProgressBar()
+    # dataloader_len = len(
+    dataloader_iter = iter(train_loader)
+    total_it_each_epoch = len(train_loader)
+    disp_dict = {} 
+    if rank == 0:
+        pbar = tqdm.tqdm(total=total_it_each_epoch, leave=False, desc='train', dynamic_ncols=True)
+    # for i, data_batch in enumerate(train_loader):
+    for i in range(total_it_each_epoch):
+        try:
+            data_batch = next(dataloader_iter)
+        except StopIteration:
+            dataloader_iter = iter(train_loader)
+            data_batch = next(dataloader_iter)
+        
         if lr_warmup_scheduler is not None and accumulated_iter <= lr_warmup_scheduler.T_max:
             cur_lr_scheduler = lr_warmup_scheduler
         else:
@@ -65,14 +76,63 @@ def train_one_epoch(model, optimizer, train_loader, lr_scheduler, lr_warmup_sche
         accumulated_iter += 1
 
         log_buffer.update(outputs['log_vars'], outputs['num_samples'])
-
         # log to console
+        if rank == 0:
+            pbar.update()
+            pbar.set_postfix(dict(total_it=accumulated_iter))
+            disp_dict.update({'epoch':'[%d][%d/%d]' % (train_epoch, i+1, len(train_loader)), 'LR': '%f'%cur_lr})
+            tbar.set_postfix(disp_dict)
+            tbar.refresh()
+        
         if rank == 0 and (i+1) % log_interval == 0:
             log_buffer.average()
             logger.info('epoch[%d][%d/%d]: lr: %f, loss: %f' % (train_epoch, i+1, len(train_loader), cur_lr, log_buffer.output['loss']))
+            # if 'loss' in log_buffer.output.keys():
+            disp_dict.update({'LOSS': log_buffer.output['loss']})
             log_buffer.clear()
+            
     return accumulated_iter
 
+
+# def train_model(model, optimizer, train_loader, lr_scheduler, optim_cfg,
+#                 start_epoch, total_epochs, start_iter, rank, logger, ckpt_save_dir,
+#                 lr_warmup_scheduler=None, ckpt_save_interval=1, max_ckpt_save_num=50, log_interval=20):
+    
+#     accumulated_iter = start_iter
+
+#     log_buffer = LogBuffer()
+
+#     for cur_epoch in range(start_epoch, total_epochs):
+
+#         trained_epoch = cur_epoch + 1
+#         accumulated_iter = train_one_epoch(
+#             model, optimizer, train_loader,
+#             lr_scheduler=lr_scheduler,
+#             lr_warmup_scheduler=lr_warmup_scheduler,
+#             accumulated_iter=accumulated_iter,
+#             train_epoch=trained_epoch,
+#             optim_cfg=optim_cfg,
+#             rank=rank,
+#             logger=logger,
+#             log_buffer = log_buffer,
+#             log_interval = log_interval
+#         )
+        
+#         # save trained model
+#         # print(f'trained_epoch {trained_epoch} {type(trained_epoch)} {ckpt_save_interval} {type(ckpt_save_interval)}')
+#         if trained_epoch % ckpt_save_interval == 0 and rank == 0:
+
+#             ckpt_list = glob.glob(os.path.join(ckpt_save_dir, 'checkpoint_epoch_*.pth'))
+#             ckpt_list.sort(key=os.path.getmtime)
+
+#             if ckpt_list.__len__() >= max_ckpt_save_num:
+#                 for cur_file_idx in range(0, len(ckpt_list) - max_ckpt_save_num + 1):
+#                     os.remove(ckpt_list[cur_file_idx])
+
+#             ckpt_name = os.path.join(ckpt_save_dir,('checkpoint_epoch_%d' % trained_epoch))
+#             save_checkpoint(
+#                 checkpoint_state(model, optimizer, trained_epoch, accumulated_iter), filename=ckpt_name,
+#             )
 
 def train_model(model, optimizer, train_loader, lr_scheduler, optim_cfg,
                 start_epoch, total_epochs, start_iter, rank, logger, ckpt_save_dir,
@@ -81,38 +141,39 @@ def train_model(model, optimizer, train_loader, lr_scheduler, optim_cfg,
     accumulated_iter = start_iter
 
     log_buffer = LogBuffer()
+    with tqdm.trange(start_epoch, total_epochs, desc='epochs', dynamic_ncols=True, leave=(rank == 0)) as tbar:
 
-    for cur_epoch in range(start_epoch, total_epochs):
-
-        trained_epoch = cur_epoch + 1
-        accumulated_iter = train_one_epoch(
-            model, optimizer, train_loader,
-            lr_scheduler=lr_scheduler,
-            lr_warmup_scheduler=lr_warmup_scheduler,
-            accumulated_iter=accumulated_iter,
-            train_epoch=trained_epoch,
-            optim_cfg=optim_cfg,
-            rank=rank,
-            logger=logger,
-            log_buffer = log_buffer,
-            log_interval = log_interval
-        )
-        
-        # save trained model
-        # print(f'trained_epoch {trained_epoch} {type(trained_epoch)} {ckpt_save_interval} {type(ckpt_save_interval)}')
-        if trained_epoch % ckpt_save_interval == 0 and rank == 0:
-
-            ckpt_list = glob.glob(os.path.join(ckpt_save_dir, 'checkpoint_epoch_*.pth'))
-            ckpt_list.sort(key=os.path.getmtime)
-
-            if ckpt_list.__len__() >= max_ckpt_save_num:
-                for cur_file_idx in range(0, len(ckpt_list) - max_ckpt_save_num + 1):
-                    os.remove(ckpt_list[cur_file_idx])
-
-            ckpt_name = os.path.join(ckpt_save_dir,('checkpoint_epoch_%d' % trained_epoch))
-            save_checkpoint(
-                checkpoint_state(model, optimizer, trained_epoch, accumulated_iter), filename=ckpt_name,
+        for cur_epoch in tbar:
+            trained_epoch = cur_epoch + 1
+            accumulated_iter = train_one_epoch(
+                model, optimizer, train_loader,
+                tbar=tbar,
+                lr_scheduler=lr_scheduler,
+                lr_warmup_scheduler=lr_warmup_scheduler,
+                accumulated_iter=accumulated_iter,
+                train_epoch=trained_epoch,
+                optim_cfg=optim_cfg,
+                rank=rank,
+                logger=logger,
+                log_buffer = log_buffer,
+                log_interval = log_interval
             )
+            
+            # save trained model
+            # print(f'trained_epoch {trained_epoch} {type(trained_epoch)} {ckpt_save_interval} {type(ckpt_save_interval)}')
+            if trained_epoch % ckpt_save_interval == 0 and rank == 0:
+
+                ckpt_list = glob.glob(os.path.join(ckpt_save_dir, 'checkpoint_epoch_*.pth'))
+                ckpt_list.sort(key=os.path.getmtime)
+
+                if ckpt_list.__len__() >= max_ckpt_save_num:
+                    for cur_file_idx in range(0, len(ckpt_list) - max_ckpt_save_num + 1):
+                        os.remove(ckpt_list[cur_file_idx])
+
+                ckpt_name = os.path.join(ckpt_save_dir,('checkpoint_epoch_%d' % trained_epoch))
+                save_checkpoint(
+                    checkpoint_state(model, optimizer, trained_epoch, accumulated_iter), filename=ckpt_name,
+                )
 
 
 def model_state_to_cpu(model_state):

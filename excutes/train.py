@@ -94,7 +94,7 @@ def main():
         optimizer, total_iters_each_epoch=len(train_loader), total_epochs=cfg.total_epochs,
         last_epoch=last_epoch, optim_cfg=cfg.optimizer, lr_cfg=cfg.lr_config
     )
-    
+    print('---------------------------------------------Start training-----------------------------------------------')
     logger.info('---------------------------------Start training---------------------------------')
     train_model(
         model,
@@ -113,6 +113,8 @@ def main():
         max_ckpt_save_num=args.max_ckpt_save_num,
         log_interval = cfg.log_config.interval
     )
+    print('---------------------------------End training---------------------------------')
+
     logger.info('---------------------------------End training---------------------------------')
 
 

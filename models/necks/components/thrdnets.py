@@ -11,6 +11,8 @@ from functools import partial
 # from dets.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 from dets.ops.pointnet2 import grouper_models 
 from .neck_utils import *
+
+structured_forward_fn = {'v1': structured_forward_v1}
 class BiGNN(nn.Module):
     def __init__(self, model_cfg):
         super(BiGNN, self).__init__()
@@ -44,20 +46,21 @@ class BiGNN(nn.Module):
             self.downsample_layers.append(spconv.SparseSequential(*_sequentials))                
 
         last_pad = (0, 0, 0)
+        
+        out_channels = self.model_cfg.downsample_layers[-1]['filters'][-1] + 2 * 32 * len(self.model_cfg.groupers)
         self.conv4_out = spconv.SparseSequential(
-            spconv.SparseConv3d(32 + 32*3 + 32 * 3, 64, (1, 1, 1), stride=(1, 1, 1), padding=last_pad,
+            spconv.SparseConv3d(out_channels, 64, (1, 1, 1), stride=(1, 1, 1), padding=last_pad,
                                 bias=False, indice_key='spconv_down2'),
             norm_fn(64),
             nn.ReLU(),
         )
-        
         self.groupers = nn.ModuleList()
         self.grouper_forward_fns = []
         for i in range(len(self.model_cfg.groupers)):
             grouper_dict = self.model_cfg.groupers[i]
             # print(grouper_dict)
             self.groupers.append(grouper_models[grouper_dict['grouper_type']](**grouper_dict.args))
-            self.grouper_forward_fns.append(partial(structured_forward, grouper=self.groupers[-1],
+            self.grouper_forward_fns.append(partial(structured_forward_fn[grouper_dict['forward_type']], grouper=self.groupers[-1],
                                             **grouper_dict['maps']))
 
     def forward(self, x, **kwargs):
@@ -68,7 +71,7 @@ class BiGNN(nn.Module):
             # print(f"layer {i}")
             x = layer(x)
             rx_list.append(x)
-
+        
         lrx_list = []        
         
         for gf_fn in self.grouper_forward_fns:
@@ -137,9 +140,6 @@ class BiGNN_Submanifold(nn.Module):
         # [200, 176, 5] -> [200, 176, 2]
         out = self.subm_out(rx_list[-1])
         return out
-
-
-
 
 class BiGNN_V1(nn.Module):
     def __init__(self, num_input_features, use_voxel_feature=False):

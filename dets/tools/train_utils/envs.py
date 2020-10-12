@@ -41,7 +41,10 @@ def set_random_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 def get_root_logger(work_dir):
+    filename = '{}.log'.format(time.strftime('%Y%m%d_%H%M%S', time.localtime()))
+    log_file = os.path.join(work_dir, filename)
     logging.basicConfig(
+        filename=filename,
         format='%(asctime)s - %(levelname)s - %(message)s',
         level=logging.INFO)
 
@@ -49,11 +52,8 @@ def get_root_logger(work_dir):
     rank, _ = get_dist_info()
     if rank != 0:
         logger.setLevel('ERROR')
-
-    filename = '{}.log'.format(time.strftime('%Y%m%d_%H%M%S', time.localtime()))
-    log_file = os.path.join(work_dir, filename)
-    file_handler = logging.FileHandler(log_file, 'w')
-    file_handler.setLevel(logging.INFO)
-    logger.addHandler(file_handler)
-
+    # file_handler = logging.FileHandler(log_file, 'w')
+    # file_handler.setLevel(logging.INFO)
+    # logger.addHandler(file_handler)
+    # logger.propagate = False
     return logger
