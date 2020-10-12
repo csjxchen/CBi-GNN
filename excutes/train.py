@@ -1,18 +1,10 @@
 from __future__ import division
-# import warnings
-# warnings.filterwarnings('ignore')
-# import __init__path
+import numba
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../'))
 print("append %s into system" % os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')))
 import argparse
-# import sys
-# import os
-# from mmcv.runner import Runner, DistSamplerSeedHook
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-# from mmdet.core import (DistOptimizerHook, CocoDistEvalRecallHook,
-                        # CocoDistEvalmAPHook, KittiEvalmAPHook, DistEvalmAPHook)
-# from mmdet.datasets import build_dataloader
 from dets.datasets.kittidata import KittiLiDAR
 from dets.tools.train_utils.envs import get_root_logger, set_random_seed
 from dets.tools.train_utils.optimization import build_optimizer, build_scheduler
@@ -36,13 +28,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument("config", help='train config file path')
     parser.add_argument('--gpus', type=int, default=1, help='number of gpus to use (only applicable to non-distributed training)')
-
-    # parser.add_argument('config', help='train config file path')
-    # parser.add_argument('--work_dir', help='the dir to save logs and models')
-    # parser.add_argument(
-    #     '--validate',
-    #     action='store_true',
-    #     help='whether to evaluate the checkpoint during training')
     parser.add_argument('--checkpoint', default=None,  help='checkpoint file')
     # parser.add_argument('--lr', type=float,  help='lr resumed')
     # parser.add_argument('--turns', type=float,  help='number of turn in one epoch')
@@ -129,5 +114,7 @@ def main():
         log_interval = cfg.log_config.interval
     )
     logger.info('---------------------------------End training---------------------------------')
+
+
 if __name__ == "__main__":
     main()
