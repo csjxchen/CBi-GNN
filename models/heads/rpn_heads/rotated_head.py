@@ -189,9 +189,10 @@ class SSDRotateHead(nn.Module):
             else:
                 bbox_score, guided_anchors = self.alignment_head(align_head_features, guided_anchors, is_test=True)        
                 det_bboxes, det_scores = self.alignment_head.get_rescore_bboxes(guided_anchors, bbox_score, batch_size, data['test_alignment_cfg'])
+                
                 alignment_outs = (det_bboxes, det_scores)
                 return rpn_outs, alignment_outs
-        
+
         return rpn_outs, None
 
     def loss(self, box_preds, cls_preds, dir_cls_preds, gt_bboxes, gt_labels, anchors, anchors_mask, cfg):

@@ -80,7 +80,7 @@ def train_one_epoch(model, optimizer, train_loader, tbar, lr_scheduler, lr_warmu
         if rank == 0:
             pbar.update()
             pbar.set_postfix(dict(total_it=accumulated_iter))
-            disp_dict.update({'epoch':'[%d][%d/%d]' % (train_epoch, i+1, len(train_loader)), 'LR': '%f'%cur_lr})
+            disp_dict.update({'epoch':'[%d][%d/%d]' % (train_epoch, i+1, len(train_loader)), 'LR': '%f' % cur_lr})
             tbar.set_postfix(disp_dict)
             tbar.refresh()
         
@@ -90,7 +90,8 @@ def train_one_epoch(model, optimizer, train_loader, tbar, lr_scheduler, lr_warmu
             # if 'loss' in log_buffer.output.keys():
             disp_dict.update({'LOSS': log_buffer.output['loss']})
             log_buffer.clear()
-            
+    if rank == 0:
+        pbar.close()
     return accumulated_iter
 
 

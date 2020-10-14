@@ -47,13 +47,13 @@ def get_root_logger(work_dir):
         filename=filename,
         format='%(asctime)s - %(levelname)s - %(message)s',
         level=logging.INFO)
-
+    
     logger = logging.getLogger()
     rank, _ = get_dist_info()
     if rank != 0:
         logger.setLevel('ERROR')
-    # file_handler = logging.FileHandler(log_file, 'w')
-    # file_handler.setLevel(logging.INFO)
-    # logger.addHandler(file_handler)
-    # logger.propagate = False
+    
+    file_handler = logging.FileHandler(log_file, 'w')
+    file_handler.setLevel(logging.INFO)
+    logger.addHandler(file_handler)
     return logger

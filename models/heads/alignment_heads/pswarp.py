@@ -57,7 +57,7 @@ class PSWarpHead(AlignmentHead):
             out = bilinear_interpolate_torch_gridsample(im, xs, ys)
             # print(f"out {out.shape} len_ga {len(ga)}")
             score = torch.mean(out, 0).view(-1)
-
+            
             bbox_scores.append(score)
         return bbox_scores, guided_anchors
     
