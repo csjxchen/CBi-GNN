@@ -179,7 +179,7 @@ class SSDRotateHead(nn.Module):
             anchors_mask        = data['anchors_mask']
             gt_bboxes           = data['gt_bboxes']
             anchors             = data['anchors']
-            guided_anchors = self.get_guided_anchors(*rpn_outs, anchors, anchors_mask, gt_bboxes, thr=0.1)
+            guided_anchors      = self.get_guided_anchors(*rpn_outs, anchors, anchors_mask, gt_bboxes, thr=0.1)
             batch_size          = data['batch_size']
             
             if not is_test:

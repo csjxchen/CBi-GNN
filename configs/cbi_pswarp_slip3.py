@@ -13,14 +13,13 @@ model = dict(
                 num_input_features=4,
                 num_hidden_features=64 * 4,
                 ThrDNet=dict(
-                    type="BiGNN",
+                    type="BiGNN_reproduce",
                     args=dict(
                         conv_inputs=[4, 16],
                         downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'paddings': [[1], [1]], 'strides':[2, 1], 'filters': [32, 32, 64]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2, 1], 'filters': [64, 64, 32]}],
-                        
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv2', 'subm2', 'subm2'], 'paddings': [[1], [1], [1]],   'strides':[2, 1, 1], 'filters': [32, 32, 32, 32]}, 
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv3', 'subm3', 'subm3'], 'paddings': [[1], [1], [1]], 'strides':[2, 1, 1], 'filters': [32, 64, 64, 64]}, 
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv4', 'subm4', 'subm4'], 'paddings': [[1, 1, 1], [1], [1]], 'strides':[2, 1, 1], 'filters': [64, 64, 64, 64]}],
                         groupers=[
                                 dict(
                                     grouper_type='GrouperDisAttention',
@@ -45,7 +44,7 @@ model = dict(
                 TwoDNet=dict(
                     type='PCDetBEVNet',
                     args=dict(
-                        num_input_features=256,
+                        num_input_features=64 * 5,
                         num_filters=[128, 256],
                         num_output_features=256,
                         concat_input=False, 
@@ -55,7 +54,6 @@ model = dict(
                         num_upsample_filters = [256, 256],
                     )
                 )
-            
             ),
             bbox_head=dict(
                 type='SSDRotateHead',
@@ -229,7 +227,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbignn_pswarp_slip'
+exp_dir = '../experiments/reproduce/cbignn_pswarp_slip3'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

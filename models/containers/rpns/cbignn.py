@@ -107,7 +107,6 @@ class CBIGNN(RPN):
             results = [kitti_bbox2results(*param) for param in zip(*alignment_outs, img_meta)]
         else:
             det_bboxes, det_scores = self.rpn_head.get_guided_dets(*rpn_outs, data['anchors'], data['anchors_mask'], None, self.test_cfg, thr=0.3)
-            
             results = [kitti_bbox2results(*param) for param in zip(det_bboxes, det_scores, img_meta)]
 
         return results
