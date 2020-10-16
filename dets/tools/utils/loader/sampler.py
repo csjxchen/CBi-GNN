@@ -21,10 +21,10 @@ class GroupSampler(Sampler):
         self.num_samples = int(np.ceil(self.dataset_size / self.samples_per_gpu)) * self.samples_per_gpu
     
     def __iter__(self):
-        indices = np.arange(self.num_samples)
+        indices = np.arange(self.dataset_size)
         np.random.shuffle(indices)
         
-        num_extra = int(np.ceil(self.num_samples / self.samples_per_gpu)) * self.samples_per_gpu - len(indices)
+        num_extra = int(np.ceil(self.dataset_size / self.samples_per_gpu)) * self.samples_per_gpu - len(indices)
         indices = np.concatenate([indices, indices[:num_extra]])
         indices = [indices[i * self.samples_per_gpu:(i + 1) * self.samples_per_gpu]
                     for i in np.random.permutation(
@@ -33,6 +33,7 @@ class GroupSampler(Sampler):
         indices = torch.from_numpy(indices).long()
         assert len(indices) == self.num_samples
         return iter(indices)
+    
     def __len__(self):
         return self.num_samples
 

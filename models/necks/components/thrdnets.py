@@ -186,7 +186,7 @@ class BiGNN_reproduce(nn.Module):
             norm_fn(64),
             nn.ReLU(),
         )
-
+        
         self.groupers = nn.ModuleList()
         self.grouper_forward_fns = []
         for i in range(len(self.model_cfg.groupers)):

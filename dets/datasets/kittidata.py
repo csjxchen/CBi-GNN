@@ -55,6 +55,8 @@ class KittiLiDAR(Dataset):
         
         with open(ann_file, 'r') as f:
             self.sample_ids = list(map(int, f.read().splitlines()))
+        print(f"self.sample_ids {len(self.sample_ids)}")
+        
         # delete set_group_flag
         self.img_manager = ImageManager(root, img_norm_cfg=img_norm_cfg, size_divisor=size_divisor)
         self.auxiliary_tools(augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold)
@@ -87,7 +89,7 @@ class KittiLiDAR(Dataset):
     
     def __len__(self):
         return len(self.sample_ids)
-
+    
     def _rand_another(self):
         # pool = np.where(self.flag == self.flag[idx])[0]
         return np.random.choice(np.arange(len(self.sample_ids)))
@@ -101,13 +103,13 @@ class KittiLiDAR(Dataset):
                 idx = self._rand_another()
                 continue
             return data
-        
+
     def prepare_train_img(self, idx):
         sample_id = self.sample_ids[idx]
         # load image
         # img = mmcv.imread(osp.join(self.img_prefix, '%06d.png' % sample_id))
         img, img_shape, pad_shape, scale_factor = self.img_manager(sample_id, scale=1, flip=False)
-
+        
         objects = read_label(osp.join(self.label_prefix, '%06d.txt' % sample_id))
         calib = Calibration(osp.join(self.calib_prefix, '%06d.txt' % sample_id))
         gt_bboxes = [obj.box3d for obj in objects if obj.type not in ["DontCare"]]

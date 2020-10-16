@@ -245,11 +245,11 @@ class SSDRotateHead(nn.Module):
             dir_loss = weighted_cross_entropy(dir_logits, dir_labels,
                                               weight=weights.view(-1),
                                               avg_factor=1.)
-             
+            
             dir_loss_reduced = dir_loss / batch_size
             dir_loss_reduced *= .2
             loss += dir_loss_reduced
-
+        
         return dict(rpn_loc_loss=loc_loss_reduced, rpn_cls_loss=cls_loss_reduced, rpn_dir_loss=dir_loss_reduced)
 
     def get_guided_anchors(self, box_preds, cls_preds, dir_cls_preds, anchors, anchors_mask, gt_bboxes, thr=.1):

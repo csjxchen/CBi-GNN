@@ -50,7 +50,11 @@ def train_one_epoch(model, optimizer, train_loader, tbar, lr_scheduler, lr_warmu
             data_batch = next(dataloader_iter)
         except StopIteration:
             dataloader_iter = iter(train_loader)
-            data_batch = next(dataloader_iter)
+        #     data_batch = next(dataloader_iter)
+        # if i < 2640:
+        #     pbar.update()
+        #     tbar.refresh()
+        #     continue
         
         if lr_warmup_scheduler is not None and accumulated_iter <= lr_warmup_scheduler.T_max:
             cur_lr_scheduler = lr_warmup_scheduler
