@@ -138,4 +138,5 @@ class PCDetBEVNet(nn.Module):
         conv_ps = ups[0].clone()
         
         x = self.conv_out(x)
+        
         return x, conv_ps 

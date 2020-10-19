@@ -55,9 +55,9 @@ class CBIGNN(RPN):
 
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
-                "gt_bboxes": data['gt_bboxes'],
-                "anchors": data['anchors'],
-                "batch_size": batch_size 
+                    "gt_bboxes": data['gt_bboxes'],
+                    "anchors": data['anchors'],
+                    "batch_size": batch_size 
                 })
         # data [dict]: with keys (rpn_head_features, 
         #                     [align_head_features, 
@@ -73,7 +73,7 @@ class CBIGNN(RPN):
         losses.update(rpn_losses)
         
         if alignment_outs:
-            refine_loss_inputs =  alignment_outs + (data['gt_bboxes'], data['gt_labels'], self.train_cfg.alignment)
+            refine_loss_inputs = alignment_outs + (data['gt_bboxes'], data['gt_labels'], self.train_cfg.alignment)
             refine_losses = self.rpn_head.alignment_head.loss(*refine_loss_inputs)
             losses.update(refine_losses)
         return losses

@@ -84,7 +84,7 @@ def gen_sample_grid(box, window_size=(4, 7), grid_offsets=(0, 0), spatial_scale=
     N = box.shape[0]
     win = window_size[0] * window_size[1]
     xg, yg, wg, lg, rg = torch.split(box, 1, dim=-1)
-
+    
     xg = xg.unsqueeze_(-1).expand(N, *window_size)
     yg = yg.unsqueeze_(-1).expand(N, *window_size)
     rg = rg.unsqueeze_(-1).expand(N, *window_size)

@@ -82,6 +82,7 @@ class BiGNN(nn.Module):
         
         lrx = torch.cat([rx_list[-1].features, *lrx_list], dim=-1)
         rx_list[-1].features = lrx
+        
         # [200, 176, 5]
         out = self.conv4_out(rx_list[-1])
         
@@ -149,7 +150,9 @@ class BiGNN_reproduce(nn.Module):
         super(BiGNN_reproduce, self).__init__()
         norm_fn = partial(nn.BatchNorm1d, eps=1e-3, momentum=0.01)
         # self.use_voxel_feature = use_voxel_feature
+
         self.model_cfg = model_cfg
+        self.repeat_num = self.model_cfg.repeat_num 
         self.conv_input = spconv.SparseSequential(
             spconv.SubMConv3d(self.model_cfg.conv_inputs[0],  self.model_cfg.conv_inputs[1], 3, padding=1, bias=False, indice_key='subm0'),
             norm_fn(self.model_cfg.conv_inputs[1]),
@@ -178,7 +181,7 @@ class BiGNN_reproduce(nn.Module):
 
         last_pad = (0, 0, 0)
         
-        out_channels = self.model_cfg.downsample_layers[-1]['filters'][-1] + 2 * 32 * len(self.model_cfg.groupers) * 3
+        out_channels = self.model_cfg.downsample_layers[-1]['filters'][-1] + 2 * 32 * len(self.model_cfg.groupers) * self.repeat_num
         
         self.conv4_out = spconv.SparseSequential(
             spconv.SparseConv3d(out_channels, 64, (1, 1, 1), stride=(1, 1, 1), padding=last_pad,
@@ -195,7 +198,7 @@ class BiGNN_reproduce(nn.Module):
             self.groupers.append(grouper_models[grouper_dict['grouper_type']](**grouper_dict.args))
             self.grouper_forward_fns.append(partial(structured_forward_fn[grouper_dict['forward_type']], grouper=self.groupers[-1],
                                             **grouper_dict['maps']))
-
+            
     def forward(self, x, **kwargs):
         rx_list = []
         x = self.conv_input(x)
@@ -211,7 +214,7 @@ class BiGNN_reproduce(nn.Module):
             _lrx = gf_fn(rx_list, batch_size=kwargs['batch_size'])
             lrx_list.append(_lrx)
         
-        lrx = torch.cat([rx_list[-1].features, * lrx_list*3 ], dim=-1)
+        lrx = torch.cat([rx_list[-1].features, * lrx_list*self.repeat_num], dim=-1)
         rx_list[-1].features = lrx
         # [200, 176, 5]
         out = self.conv4_out(rx_list[-1])

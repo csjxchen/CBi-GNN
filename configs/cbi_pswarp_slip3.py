@@ -15,6 +15,7 @@ model = dict(
                 ThrDNet=dict(
                     type="BiGNN_reproduce",
                     args=dict(
+                        repeat_num = 3,
                         conv_inputs=[4, 16],
                         downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
                                     {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv2', 'subm2', 'subm2'], 'paddings': [[1], [1], [1]],   'strides':[2, 1, 1], 'filters': [32, 32, 32, 32]}, 

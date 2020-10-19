@@ -139,7 +139,7 @@ data = dict(
     train=dict(
         type=dataset_type,
         root=data_root + 'training/',
-        ann_file=data_root + '../ImageSets/trainval.txt',
+        ann_file=data_root + '../ImageSets/train.txt',
         img_prefix=None,
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
@@ -151,7 +151,7 @@ data = dict(
         augmentor=dict(
             type='PointAugmentor',
             root_path=data_root,
-            info_path=data_root + 'kitti_dbinfos_trainval.pkl',
+            info_path=data_root + 'kitti_dbinfos_train.pkl',
             sample_classes=['Car'],
             min_num_points=5,
             sample_max_num=15,
@@ -181,8 +181,8 @@ data = dict(
 
     val=dict(
         type=dataset_type,
-        root=data_root + 'testing/',
-        ann_file=data_root + '../ImageSets/test.txt',
+        root=data_root + 'training/',
+        ann_file=data_root + '../ImageSets/val.txt',
         img_prefix=None,
         # img_scale=(1242, 375),
         img_norm_cfg=img_norm_cfg,
@@ -212,7 +212,7 @@ data = dict(
 )
 # optimizer
 optimizer = dict(
-    type='adam_onecycle', lr=0.01, weight_decay=0.001,
+    type='adam_onecycle', lr=0.003, weight_decay=0.01,
     grad_clip=dict(max_norm=10, norm_type=2)
 )
 # learning policy
@@ -223,12 +223,12 @@ lr_config = dict(
     pct_start = 0.4
 )
 checkpoint_config = dict(interval=2)
-log_config = dict(interval=40)
+log_config = dict(interval=50)
 
 total_epochs = 80
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbignn_pswarp_slip3_online'
+exp_dir = '../experiments/reproduce/cbignn_pswarp_slip4'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
