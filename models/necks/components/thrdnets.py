@@ -211,7 +211,7 @@ class BiGNN_reproduce(nn.Module):
             _lrx = gf_fn(rx_list, batch_size=kwargs['batch_size'])
             lrx_list.append(_lrx)
         
-        lrx = torch.cat([rx_list[-1].features, * lrx_list*3 ], dim=-1)
+        lrx = torch.cat([rx_list[-1].features, * lrx_list * 3 ], dim=-1)
         rx_list[-1].features = lrx
         # [200, 176, 5]
         out = self.conv4_out(rx_list[-1])

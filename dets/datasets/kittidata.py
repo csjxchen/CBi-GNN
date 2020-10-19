@@ -305,7 +305,7 @@ class KittiLiDAR(Dataset):
                     anchors_area = np.ones((N), dtype=np.float32) + 10
                     anchors_mask = anchors_area > self.anchor_area_threshold
                     # print(N, anchors_mask.sum())
-                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.bool)))
+                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
 
         if self.with_label:
             data['gt_labels'] = DC(to_tensor(gt_labels), cpu_only=True)

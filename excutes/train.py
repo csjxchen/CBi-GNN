@@ -1,6 +1,8 @@
 from __future__ import division
 import numba
 import os, sys
+import matplotlib as mlp
+mlp.use('Agg')
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../'))
 print("append %s into system" % os.path.dirname(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')))
 import argparse
@@ -96,6 +98,8 @@ def main():
     )
     print('---------------------------------------------Start training-----------------------------------------------')
     logger.info('---------------------------------Start training---------------------------------')
+    logger.info(f"model len {len(model.state_dict())}")
+    print(f"model len {len(model.state_dict())}")
     train_model(
         model,
         optimizer,
