@@ -42,7 +42,7 @@ class Detector(nn.Module):
                                 img_shape=img_shape,
                                 sample_idx=sample_id,
                                 calib=calib
-                                )
+                        )
                         }   
         """
         # if train:

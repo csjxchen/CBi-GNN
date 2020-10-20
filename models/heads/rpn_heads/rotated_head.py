@@ -82,7 +82,7 @@ class SSDRotateHead(nn.Module):
             dir_cls_targets = one_hot(
                 dir_cls_targets, 2, dtype=anchors.dtype)
         return dir_cls_targets
-
+    
     def prepare_loss_weights(self, labels,
                              pos_cls_weight=1.0,
                              neg_cls_weight=1.0,
@@ -183,6 +183,7 @@ class SSDRotateHead(nn.Module):
             batch_size          = data['batch_size']
             
             if not is_test:
+                # return outputs for training
                 bbox_score = self.alignment_head(align_head_features, guided_anchors)
                 alignment_outs = (bbox_score, guided_anchors)
                 return rpn_outs, alignment_outs
@@ -251,7 +252,7 @@ class SSDRotateHead(nn.Module):
             loss += dir_loss_reduced
         
         return dict(rpn_loc_loss=loc_loss_reduced, rpn_cls_loss=cls_loss_reduced, rpn_dir_loss=dir_loss_reduced)
-
+        
     def get_guided_anchors(self, box_preds, cls_preds, dir_cls_preds, anchors, anchors_mask, gt_bboxes, thr=.1):
         
         batch_size = box_preds.shape[0]

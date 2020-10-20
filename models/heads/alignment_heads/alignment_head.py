@@ -19,7 +19,6 @@ from models.utils import change_default_args, Sequential
 class AlignmentHead(nn.Module):
     def __init__(self):
         super(AlignmentHead, self).__init__()
-        pass
     def forward(self, x, guided_anchors, is_test=False):
         if is_test:
             return self.forward_test(x, guided_anchors)
@@ -96,7 +95,7 @@ class AlignmentHead(nn.Module):
             det_bboxes.append(bbox_pred.detach().cpu().numpy())
             det_scores.append(scores.detach().cpu().numpy())
         return det_bboxes, det_scores
-
+    
     def get_guided_bboxes(self, guided_anchors, cls_scores, batch_size, cfg):
         det_bboxes = list()
         det_scores = list()

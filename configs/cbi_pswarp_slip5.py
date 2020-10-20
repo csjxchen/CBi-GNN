@@ -13,14 +13,14 @@ model = dict(
                 num_input_features=4,
                 num_hidden_features=64 * 4,
                 ThrDNet=dict(
-                    type="BiGNN_reproduce",
+                    type="BiGNN_reproduce_v1",
                     args=dict(
-                        repeat_num = 3,
+                        repeat_num=3,
                         conv_inputs=[4, 16],
-                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
-                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv2', 'subm2', 'subm2'], 'paddings': [[1], [1], [1]],   'strides':[2, 1, 1], 'filters': [32, 32, 32, 32]}, 
+                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 16]},
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv2', 'subm2', 'subm2'], 'paddings': [[1], [1], [1]],   'strides':[2, 1, 1], 'filters': [16, 32, 32, 32]}, 
                                     {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv3', 'subm3', 'subm3'], 'paddings': [[1], [1], [1]], 'strides':[2, 1, 1], 'filters': [32, 64, 64, 64]}, 
-                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv4', 'subm4', 'subm4'], 'paddings': [[1, 1, 1], [1], [1]], 'strides':[2, 1, 1], 'filters': [64, 64, 64, 64]}],
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv4', 'subm4', 'subm4'], 'paddings': [[0, 1, 1], [1], [1]], 'strides':[2, 1, 1], 'filters': [64, 64, 64, 64]}],
                         groupers=[
                                 dict(
                                     grouper_type='GrouperDisAttention',
@@ -36,16 +36,16 @@ model = dict(
                                     maps=dict(
                                         lr_index=3,
                                         hr_index=2,
-                                        lr_voxel_size=(0.4, 0.4, 0.8),   
+                                        lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.2, 0.2, 0.4),
                                         offset=(0., -40., -3.)
-                                        )),  
+                                        ))
                                 ])
                             ),
                 TwoDNet=dict(
                     type='PCDetBEVNet',
                     args=dict(
-                        num_input_features=64 * 5,
+                        num_input_features=128 * 2,
                         num_filters=[128, 256],
                         num_output_features=256,
                         concat_input=False, 
@@ -139,7 +139,7 @@ data = dict(
     train=dict(
         type=dataset_type,
         root=data_root + 'training/',
-        ann_file=data_root + '../ImageSets/trainval.txt',
+        ann_file=data_root + '../ImageSets/train.txt',
         img_prefix=None,
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
@@ -151,7 +151,7 @@ data = dict(
         augmentor=dict(
             type='PointAugmentor',
             root_path=data_root,
-            info_path=data_root + 'kitti_dbinfos_trainval.pkl',
+            info_path=data_root + 'kitti_dbinfos_train.pkl',
             sample_classes=['Car'],
             min_num_points=5,
             sample_max_num=15,
@@ -181,8 +181,8 @@ data = dict(
 
     val=dict(
         type=dataset_type,
-        root=data_root + 'testing/',
-        ann_file=data_root + '../ImageSets/test.txt',
+        root=data_root + 'training/',
+        ann_file=data_root + '../ImageSets/val.txt',
         img_prefix=None,
         # img_scale=(1242, 375),
         img_norm_cfg=img_norm_cfg,
@@ -223,12 +223,12 @@ lr_config = dict(
     pct_start = 0.4
 )
 checkpoint_config = dict(interval=2)
-log_config = dict(interval=40)
+log_config = dict(interval=50)
 
-total_epochs = 80
+total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbignn_pswarp_slip3_online'
+exp_dir = '../experiments/reproduce/cbignn_pswarp_slip5'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
