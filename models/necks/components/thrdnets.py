@@ -47,7 +47,7 @@ class BiGNN(nn.Module):
 
         last_pad = (0, 0, 0)
         
-        out_channels = self.model_cfg.downsample_layers[-1]['filters'][-1] + 2 * 32 * len(self.model_cfg.groupers)
+        out_channels = self.model_cfg.downsample_layers[-1]['filters'][-1] + 64 * len(self.model_cfg.groupers)
         
         self.conv4_out = spconv.SparseSequential(
             spconv.SparseConv3d(out_channels, 64, (1, 1, 1), stride=(1, 1, 1), padding=last_pad,

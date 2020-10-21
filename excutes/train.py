@@ -96,10 +96,10 @@ def main():
         optimizer, total_iters_each_epoch=len(train_loader), total_epochs=cfg.total_epochs,
         last_epoch=last_epoch, optim_cfg=cfg.optimizer, lr_cfg=cfg.lr_config
     )
-    print('---------------------------------------------Start training-----------------------------------------------')
-    logger.info('---------------------------------Start training---------------------------------')
     logger.info(f"model len {len(model.state_dict())}")
     print(f"model len {len(model.state_dict())}")
+    print('---------------------------------------------Start training-----------------------------------------------')
+    logger.info('---------------------------------Start training---------------------------------')
     train_model(
         model,
         optimizer,

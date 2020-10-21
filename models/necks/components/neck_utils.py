@@ -79,9 +79,11 @@ def structured_forward_v1(feats, lr_index, hr_index, batch_size, grouper, lr_vox
             cur_hr_xyz = cur_hr_indices[:, 1:].unsqueeze(0)
             _, new_features = grouper(cur_hr_xyz.contiguous(), cur_lr_xyz.contiguous(), cur_hr_features.contiguous())
             new_lr_features.append(new_features.squeeze(0))
+        
         new_lr_features = torch.cat(new_lr_features, dim=1)
         new_lr_features = new_lr_features.transpose(0, 1)
         # new_lr_features = torch.cat([lr_features, new_lr_features], dim=-1)
+        # lrx.features = new_lr_features
         return new_lr_features
 
 
