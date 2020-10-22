@@ -262,7 +262,7 @@ class BiGNN_reproduce_v1(nn.Module):
             spconv.SparseConv3d(out_channels, 128, (3, 1, 1), stride=(2, 1, 1), padding=last_pad,
                                 bias=False, indice_key='spconv_down2'),
             norm_fn(128),
-            nn.ReLU(),
+            nn.ReLU(),  
         )
         
         self.groupers = nn.ModuleList()
@@ -290,6 +290,7 @@ class BiGNN_reproduce_v1(nn.Module):
             lrx_list.append(_lrx)
         
         lrx = torch.cat([rx_list[-1].features, * lrx_list*self.repeat_num], dim=-1)
+
         rx_list[-1].features = lrx
         # [200, 176, 5]
         out = self.conv4_out(rx_list[-1])

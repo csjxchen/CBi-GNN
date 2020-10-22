@@ -3,6 +3,8 @@ import __init__path
 import argparse
 import torch
 import mmcv
+import matplotlib as mlp
+mlp.use('Agg')
 # from mmcv.runner import load_checkpoint, parallel_test
 from mmcv.parallel import scatter, collate, MMDataParallel
 from dets.tools.evaluation.kitti_eval import get_official_eval_result, get_official_eval_result_v1

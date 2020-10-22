@@ -205,7 +205,7 @@ class KittiLiDAR(Dataset):
                     anchors_area = np.ones((N), dtype=np.float32) + 10
                     anchors_mask = anchors_area > self.anchor_area_threshold
                     # print(N, anchors_mask.sum())
-                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.bool)))
+                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
             
             # filter gt_bbox out of range
             bv_range = self.generator.point_cloud_range[[0, 1, 3, 4]]
