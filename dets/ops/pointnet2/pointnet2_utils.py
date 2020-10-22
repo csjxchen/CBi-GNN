@@ -27,7 +27,7 @@ class FurthestPointSampling(Function):
 
         pointnet2.furthest_point_sampling_wrapper(B, N, npoint, xyz, temp, output)
         return output
-
+    
     @staticmethod
     def backward(xyz, a=None):
         return None, None

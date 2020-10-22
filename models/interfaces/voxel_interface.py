@@ -13,7 +13,7 @@ class SimpleVoxel(nn.Module):
         super(SimpleVoxel, self).__init__()
         self.name = name
         self.num_input_features = num_input_features
-    
+        
     def forward(self, features, **kwargs):
         return features
     

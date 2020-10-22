@@ -86,6 +86,16 @@ def structured_forward_v1(feats, lr_index, hr_index, batch_size, grouper, lr_vox
         # lrx.features = new_lr_features
         return new_lr_features
 
+def fps_voxel_downscale_operation(x, down_scale=2.0):
+    indices = x.indices.float()
+    features = x.features
+    
+
+
+
+
+
+
 
 
 # def structured_forward_v2(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset):

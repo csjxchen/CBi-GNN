@@ -11,7 +11,6 @@ from functools import partial
 # from dets.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 from dets.ops.pointnet2 import grouper_models 
 from .neck_utils import *
-
 structured_forward_fn = {'v1': structured_forward_v1}
 class BiGNN(nn.Module):
     def __init__(self, model_cfg):
@@ -82,11 +81,11 @@ class BiGNN(nn.Module):
         
         lrx = torch.cat([rx_list[-1].features, *lrx_list], dim=-1)
         rx_list[-1].features = lrx
-        
         # [200, 176, 5]
         out = self.conv4_out(rx_list[-1])
         
         return out
+
 
 class BiGNN_Submanifold(nn.Module):
     def __init__(self, model_cfg):
@@ -221,7 +220,6 @@ class BiGNN_reproduce(nn.Module):
         
         return out
 
-
 class BiGNN_reproduce_v1(nn.Module):
     def __init__(self, model_cfg):
         super(BiGNN_reproduce_v1, self).__init__()
@@ -297,3 +295,4 @@ class BiGNN_reproduce_v1(nn.Module):
         out = self.conv4_out(rx_list[-1])
         
         return out
+

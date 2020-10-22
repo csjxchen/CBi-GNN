@@ -43,16 +43,13 @@ class CBIGNN(RPN):
                         anchors
         """
         losses = {}
-
+        
         img_meta = data.pop('img_meta')
         img = data.pop('img')
         batch_size =  len(img_meta)
-        
         data = self.merge_second_batch(data)
         voxel_x = self.backbone(features=data['voxels'])
-
         neck_outs = self.neck({"voxel_input": voxel_x,  "coords":data['coordinates'], "batch_size": batch_size})
-
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
                     "gt_bboxes": data['gt_bboxes'],
