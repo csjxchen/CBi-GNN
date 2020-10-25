@@ -26,11 +26,12 @@ model = dict(
                                     forward_type='v1',
                                     args=dict(
                                         radius=1.0,
-                                        nsamples=64,
+                                        nsamples=128,
                                         mlps=[16, 32],
                                         use_xyz=True,
                                         # xyz_mlp_spec=[3, 32, 32],
                                         xyz_mlp_spec=[3, 32],
+
                                         xyz_mlp_bn=False,
                                         feat_mlp_bn=False,
                                         instance_norm=False
@@ -273,7 +274,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbignn_pswarp_v1'
+exp_dir = '../experiments/reproduce/cbignn_pswarp_v2'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

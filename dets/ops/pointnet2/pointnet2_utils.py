@@ -27,7 +27,7 @@ class FurthestPointSampling(Function):
 
         pointnet2.furthest_point_sampling_wrapper(B, N, npoint, xyz, temp, output)
         return output
-    
+
     @staticmethod
     def backward(xyz, a=None):
         return None, None
@@ -92,7 +92,7 @@ class ThreeNN(Function):
         m = known.size(0)
         dist2 = torch.cuda.FloatTensor(N, 3)
         idx = torch.cuda.IntTensor(N, 3)
-
+        
         pointnet2.three_nn_wrapper(N, m, unknown, known, dist2, idx)
         return torch.sqrt(dist2), idx
 

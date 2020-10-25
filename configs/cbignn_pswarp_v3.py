@@ -31,6 +31,7 @@ model = dict(
                                         use_xyz=True,
                                         # xyz_mlp_spec=[3, 32, 32],
                                         xyz_mlp_spec=[3, 32],
+
                                         xyz_mlp_bn=False,
                                         feat_mlp_bn=False,
                                         instance_norm=False
@@ -40,7 +41,8 @@ model = dict(
                                         hr_index=0,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.05, 0.05, 0.1),
-                                        offset=(0., -40., -3.)
+                                        offset=(0., -40., -3.),
+                                        shuffle=True
                                         )),
                                 dict(
                                     grouper_type='GrouperDisAttention_reproduce_v2',
@@ -61,7 +63,8 @@ model = dict(
                                         hr_index=1,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.1, 0.1, 0.2),
-                                        offset=(0., -40., -3.)
+                                        offset=(0., -40., -3.),
+                                        shuffle=True
                                         )),
                                 dict(
                                     grouper_type='GrouperDisAttention_reproduce_v2',
@@ -73,7 +76,6 @@ model = dict(
                                         use_xyz=True,
                                         # xyz_mlp_spec=[3, 32, 32],
                                         xyz_mlp_spec=[3, 32],
-
                                         xyz_mlp_bn=False,
                                         feat_mlp_bn=False,
                                         instance_norm=False
@@ -83,7 +85,8 @@ model = dict(
                                         hr_index=2,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.2, 0.2, 0.4),
-                                        offset=(0., -40., -3.)
+                                        offset=(0., -40., -3.),
+                                        shuffle=True
                                         )),
                                 ])
                             ),
@@ -273,7 +276,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbignn_pswarp_v1'
+exp_dir = '../experiments/reproduce/cbignn_pswarp_v3'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
