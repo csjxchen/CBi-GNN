@@ -13,7 +13,7 @@ model = dict(
                 num_input_features=4,
                 num_hidden_features=64 * 4,
                 ThrDNet=dict(
-                    type="BiGNN",
+                    type="BiGNN_Light",
                     args=dict(
                         conv_inputs=[4, 16],
                         downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 16]},
@@ -31,7 +31,6 @@ model = dict(
                                         use_xyz=True,
                                         # xyz_mlp_spec=[3, 32, 32],
                                         xyz_mlp_spec=[3, 32],
-
                                         xyz_mlp_bn=False,
                                         feat_mlp_bn=False,
                                         instance_norm=False
@@ -41,7 +40,8 @@ model = dict(
                                         hr_index=0,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.05, 0.05, 0.1),
-                                        offset=(0., -40., -3.)
+                                        offset=(0., -40., -3.),
+                                        shuffle=True
                                         )),
                                 dict(
                                     grouper_type='GrouperDisAttention_reproduce_v2',
@@ -62,7 +62,8 @@ model = dict(
                                         hr_index=1,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.1, 0.1, 0.2),
-                                        offset=(0., -40., -3.)
+                                        offset=(0., -40., -3.),
+                                        shuffle=True
                                         )),
                                 dict(
                                     grouper_type='GrouperDisAttention_reproduce_v2',
@@ -74,7 +75,6 @@ model = dict(
                                         use_xyz=True,
                                         # xyz_mlp_spec=[3, 32, 32],
                                         xyz_mlp_spec=[3, 32],
-
                                         xyz_mlp_bn=False,
                                         feat_mlp_bn=False,
                                         instance_norm=False
@@ -84,10 +84,34 @@ model = dict(
                                         hr_index=2,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.2, 0.2, 0.4),
-                                        offset=(0., -40., -3.)
-                                        )),
-                                ])
-                            ),
+                                        offset=(0., -40., -3.),
+                                        shuffle=True
+                                        ))
+                                ],
+                            fpsdownsamplers=[
+                                    dict(
+                                        downscaling=2,
+                                        voxel_size=(0.05, 0.05, 0.1),
+                                        offset=(0., -40., -3.),
+                                        ),
+                                    dict(
+                                        downscaling=4,
+                                        voxel_size=(0.1, 0.1, 0.2),
+                                        offset=(0., -40., -3.),
+                                        ),
+                                    dict(
+                                        downscaling=8,
+                                        voxel_size=(0.2, 0.2, 0.4),
+                                        offset=(0., -40., -3.),
+                                        ),
+                                    dict(
+                                        downscaling=16,
+                                        voxel_size=(0.4, 0.4, 1.0),
+                                        offset=(0., -40., -3.),
+                                        ),
+                            ]),
+                        ),
+                
                 TwoDNet=dict(
                     type='PCDetBEVNet',
                     args=dict(
@@ -185,7 +209,7 @@ data = dict(
     train=dict(
         type=dataset_type,
         root=data_root + 'training/',
-        ann_file=data_root + '../ImageSets/trainval.txt',
+        ann_file=data_root + '../ImageSets/train.txt',
         img_prefix=None,
         img_norm_cfg=img_norm_cfg,
         size_divisor=32,
@@ -197,7 +221,7 @@ data = dict(
         augmentor=dict(
             type='PointAugmentor',
             root_path=data_root,
-            info_path=data_root + 'kitti_dbinfos_trainval.pkl',
+            info_path=data_root + 'kitti_dbinfos_train.pkl',
             sample_classes=['Car'],
             min_num_points=5,
             sample_max_num=15,
@@ -227,8 +251,8 @@ data = dict(
 
     val=dict(
         type=dataset_type,
-        root=data_root + 'testing/',
-        ann_file=data_root + '../ImageSets/test.txt',
+        root=data_root + 'training/',
+        ann_file=data_root + '../ImageSets/val.txt',
         img_prefix=None,
         # img_scale=(1242, 375),
         img_norm_cfg=img_norm_cfg,
@@ -274,7 +298,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbignn_pswarp_v1_online'
+exp_dir = '../experiments/reproduce/light_cbignn_pswarp_v1'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

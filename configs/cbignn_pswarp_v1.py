@@ -31,7 +31,6 @@ model = dict(
                                         use_xyz=True,
                                         # xyz_mlp_spec=[3, 32, 32],
                                         xyz_mlp_spec=[3, 32],
-
                                         xyz_mlp_bn=False,
                                         feat_mlp_bn=False,
                                         instance_norm=False

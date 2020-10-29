@@ -219,7 +219,7 @@ class KittiLiDAR(Dataset):
         # skip the image if there is no valid gt bbox
         if len(gt_bboxes) == 0:
             return None
-
+        
         # limit rad to [-pi, pi]
         gt_bboxes[:, 6] = limit_period(
             gt_bboxes[:, 6], offset=0.5, period=2 * np.pi)
