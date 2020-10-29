@@ -54,7 +54,7 @@ def parse_spconv_cfg(downsample_layer_cfgs, norm_fn):
         layers.append(spconv.SparseSequential(*_sequentials))
     return layers
 
-def structured_forward_v1(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset):
+def structured_forward_v1(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset, shuffle=False):
         lrx = feats[lr_index]
         hrx = feats[hr_index]
         lr_indices = lrx.indices.float()
@@ -66,15 +66,22 @@ def structured_forward_v1(feats, lr_index, hr_index, batch_size, grouper, lr_vox
                         offset + .5 * lr_voxel_size
         hr_indices[:, 1:] = hr_indices[:, [3, 2, 1]] * hr_voxel_size + \
                         offset + .5 * hr_voxel_size
+        # if 
         hr_features = hrx.features
         lr_features = lrx.features
+        
         new_lr_features = []
         for bidx in range(batch_size):
             lr_mask = lr_indices[:, 0] == bidx
             hr_mask = hr_indices[:, 0] == bidx
             cur_lr_indices = lr_indices[lr_mask]
             cur_hr_indices = hr_indices[hr_mask]
-            cur_hr_features = hr_features[hr_mask].unsqueeze(0).transpose(1, 2)
+            cur_hr_features = hr_features[hr_mask]
+            if shuffle:
+                random_perm = torch.randperm(cur_hr_indices.shape[0]).long()
+                cur_hr_features = cur_hr_features[random_perm]
+                cur_hr_indices  = cur_hr_indices[random_perm]
+            cur_hr_features = cur_hr_features.unsqueeze(0).transpose(1, 2)
             cur_lr_xyz = cur_lr_indices[:, 1:].unsqueeze(0)
             cur_hr_xyz = cur_hr_indices[:, 1:].unsqueeze(0)
             _, new_features = grouper(cur_hr_xyz.contiguous(), cur_lr_xyz.contiguous(), cur_hr_features.contiguous())
@@ -86,7 +93,44 @@ def structured_forward_v1(feats, lr_index, hr_index, batch_size, grouper, lr_vox
         # lrx.features = new_lr_features
         return new_lr_features
 
-
+def structured_forward_pcs(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size,  offset, shuffle=False):
+        lrx = feats[lr_index]
+        hrx = feats[hr_index]
+        lr_indices = lrx.indices.float()
+        hr_indices = hrx.indices.float()
+        lr_voxel_size = torch.Tensor(lr_voxel_size).to(lr_indices.device)
+        # hr_voxel_size = torch.Tensor(hr_voxel_size).to(hr_indices.device)
+        offset = torch.Tensor(offset).to(lr_indices.device)
+        lr_indices[:, 1:] = lr_indices[:, [3, 2, 1]] * lr_voxel_size + \
+                        offset + .5 * lr_voxel_size
+        # hr_indices[:, 1:] = hr_indices[:, [3, 2, 1]] * hr_voxel_size + \
+                        # offset + .5 * hr_voxel_size
+        # if 
+        hr_features = hrx.features
+        lr_features = lrx.features
+        
+        new_lr_features = []
+        for bidx in range(batch_size):
+            lr_mask = lr_indices[:, 0] == bidx
+            hr_mask = hr_indices[:, 0] == bidx
+            cur_lr_indices = lr_indices[lr_mask]
+            # cur_hr_indices = hr_indices[hr_mask]
+            cur_hr_features = hr_features[hr_mask]
+            if shuffle:
+                random_perm = torch.randperm(cur_hr_indices.shape[0]).long()
+                cur_hr_features = cur_hr_features[random_perm]
+                # cur_hr_indices  = cur_hr_indices[random_perm]
+            cur_hr_xyz = cur_hr_features[:, :3].unsqueeze(0)
+            cur_lr_xyz = cur_lr_indices[:, 1:].unsqueeze(0)
+            cur_hr_features = cur_hr_features.unsqueeze(0).transpose(1, 2)
+            _, new_features = grouper(cur_hr_xyz.contiguous(), cur_lr_xyz.contiguous(), cur_hr_features.contiguous())
+            new_lr_features.append(new_features.squeeze(0))
+        
+        new_lr_features = torch.cat(new_lr_features, dim=1)
+        new_lr_features = new_lr_features.transpose(0, 1)
+        # new_lr_features = torch.cat([lr_features, new_lr_features], dim=-1)
+        # lrx.features = new_lr_features
+        return new_lr_features
 
 # def structured_forward_v2(feats, lr_index, hr_index, batch_size, grouper, lr_voxel_size, hr_voxel_size, offset):
 #         lrx = feats[lr_index]

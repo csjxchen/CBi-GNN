@@ -130,7 +130,7 @@ def parse_args():
         default=1,
         type=int,
         help='Number of processes per GPU')
-    
+    parser.add_argument('--version', default=None, help='version definition')
     parser.add_argument('--save_to_file', default=False,  help='output result file')
     parser.add_argument('--test', action='store_true',  help='tesing for test server')
     parser.add_argument(
@@ -158,7 +158,8 @@ def main():
         model = MMDataParallel(model, device_ids=[0])
         epoch, accumulated_iters, optimizer_state = load_params_from_file(model, args.checkpoint)
         if args.save_to_file:
-            saved_dir = os.path.join(cfg.exp_dir, f"{epoch}_outs")
+            # saved_dir = os.path.join(cfg.exp_dir, f"{epoch}_outs")
+            saved_dir = os.path.join(cfg.exp_dir, f"{epoch}_outs") if not args.version else  os.path.join(cfg.exp_dir, f"{epoch}_{args.version}_outs")
             print(f"results will be saved into {saved_dir}")
         data_loader = build_dataloader(
             dataset,
@@ -173,7 +174,10 @@ def main():
     
     
     if not args.test: 
-        result_file = open(pathlib.Path(cfg.exp_dir) / f'result_{epoch}_outs.txt', 'w')
+        # result_file = open(pathlib.Path(cfg.exp_dir) / f'result_{epoch}_outs.txt', 'w')
+        result_file_str = f'result_{epoch}_outs.txt' if not args.version  else f'result_{epoch}_{args.version}_outs.txt'
+        # result_file = open(pathlib.Path(cfg.exp_dir) / f'result_{epoch}_outs.txt', 'w')
+        result_file = open(pathlib.Path(cfg.exp_dir) / result_file_str, 'w')
         # kitti evaluation
         gt_annos = kitti.get_label_annos(dataset.label_prefix, dataset.sample_ids)
         result = get_official_eval_result(gt_annos, outputs, current_classes=class_names)

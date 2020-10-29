@@ -52,7 +52,7 @@ class BEVNet(nn.Module):
         x = F.relu(self.bn5(x), inplace=True)
         x = self.conv6(x)
         x = F.relu(self.bn6(x), inplace=True)
-        conv6 = x.clone()
+        conv6 = x
         x = self.conv7(x)
         x = F.relu(self.bn7(x), inplace=True)
         return x, conv6
@@ -135,7 +135,7 @@ class PCDetBEVNet(nn.Module):
         if len(self.deblocks)>len(self.blocks):
             x = self.deblocks[-1](x)        
         
-        conv_ps = ups[0].clone()
+        conv_ps = ups[0]
         
         x = self.conv_out(x)
         
