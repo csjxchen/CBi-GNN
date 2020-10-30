@@ -11,12 +11,9 @@ from functools import partial
 # from dets.ops.pointnet2.layers_utils import Grouper7, Grouper8, Grouper9
 from dets.ops.pointnet2 import grouper_models 
 from .neck_utils import *
-<<<<<<< HEAD
 
 structured_forward_fn = {'v1': structured_forward_v1, 'pcs':structured_forward_pcs}
-=======
-structured_forward_fn = {'v1': structured_forward_v1}
->>>>>>> 6b7a1f0333fdd74952fae9dda9324b6ab4d7669f
+
 class BiGNN(nn.Module):
     def __init__(self, model_cfg):
         super(BiGNN, self).__init__()
