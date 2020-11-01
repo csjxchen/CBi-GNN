@@ -265,6 +265,6 @@ def kitti_bbox2results(boxes_lidar, scores, meta, labels=None):
             "bbox": box2d_rgb, "box3d_camera": boxes_cam, "box3d_lidar": boxes_lidar,\
             "alphas": alphas, "scores": scores, "label_preds": labels, "image_idx": sample_id
         }
-
+        
     return predictions_dict
 

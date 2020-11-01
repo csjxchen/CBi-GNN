@@ -41,7 +41,9 @@ class KittiLiDAR(Dataset):
                  anchor_area_threshold=1,
                  target_encoder=None,
                  out_size_factor=2,
-                 test_mode=False):
+                 test_mode=False,
+                 labels_dir=None
+                 ):
         super(KittiLiDAR, self).__init__()
         self.root = root    
         self.class_names = class_names
@@ -51,7 +53,7 @@ class KittiLiDAR(Dataset):
         self.with_point = with_point
         self.lidar_prefix = osp.join(root, 'velodyne_reduced')
         self.calib_prefix = osp.join(root, 'calib')
-        self.label_prefix = osp.join(root, 'label_2')
+        self.label_prefix = osp.join(root, 'label_2') if labels_dir is None else labels_dir
         
         with open(ann_file, 'r') as f:
             self.sample_ids = list(map(int, f.read().splitlines()))

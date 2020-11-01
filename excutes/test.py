@@ -40,7 +40,7 @@ def single_test(model, data_loader, saveto=None, class_names=['Car'], save_ious_
     model.eval()
     annos = []
     prog_bar = mmcv.ProgressBar(len(data_loader.dataset))
-
+    
     for i, data in enumerate(data_loader):
         # print(data.k
         with torch.no_grad():

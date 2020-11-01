@@ -177,7 +177,6 @@ class NearestIouSimilarity(object):
         Returns:
           A tensor with shape [N, M] representing negated pairwise squared distance.
         """
-
         boxes1_near = boxes3d_to_near_torch(boxes1)
         boxes2_near = boxes3d_to_near_torch(boxes2)
         return boxes_iou(boxes1_near, boxes2_near)
