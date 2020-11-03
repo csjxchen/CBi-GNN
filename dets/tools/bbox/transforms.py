@@ -228,43 +228,53 @@ def kitti_empty_results(sample_id):
                             "box3d_lidar": None, "scores": None,
                             "label_preds": None, "image_idx": sample_id}
 
-def kitti_bbox2results(boxes_lidar, scores, meta, labels=None):
+def kitti_bbox2results(boxes_lidar, scores, meta, labels=None, class_names=None):
     calib = meta['calib']
     sample_id = meta['sample_idx']
-
+    image_shape = meta['img_shape'][: 2]
     if scores is None \
         or len(scores) == 0 \
             or boxes_lidar is None \
                 or len(boxes_lidar) == 0:
-        
-        predictions_dict = kitti_empty_results(sample_id)
-        
-    else:
-        if labels is None:
-            labels = np.zeros(len(boxes_lidar), dtype=np.long)
 
-        boxes_lidar[:, -1] = limit_period(
-            boxes_lidar[:, -1], offset=0.5, period=np.pi * 2,
-        )
+        return kitti.empty_result_anno()
 
-        boxes_cam = np.zeros_like(boxes_lidar)
-        boxes_cam[:, :3] = project_velo_to_rect(boxes_lidar[:, :3], calib)
-        boxes_cam[:, 3:] = boxes_lidar[:, [4, 5, 3, 6]]
+    hehe = kitti.get_start_result_anno()
+    hehe.update({'image_idx': []})
 
-        corners_cam = center_to_corner_box3d(boxes_cam, origin=[0.5, 1.0, 0.5], axis=1)
-        corners_rgb = project_rect_to_image(corners_cam, calib)
+    boxes_lidar[:, -1] = limit_period(
+        boxes_lidar[:, -1], offset=0.5, period=np.pi * 2,
+    )
+    boxes_cam = np.zeros_like(boxes_lidar)
+    boxes_cam[:, :3] = project_velo_to_rect(boxes_lidar[:, :3], calib)
+    boxes_cam[:, 3:] = boxes_lidar[:, [4, 5, 3, 6]]
+    corners_cam = center_to_corner_box3d(boxes_cam, origin=[0.5, 1.0, 0.5], axis=1)
+    corners_rgb = project_rect_to_image(corners_cam, calib)
+    minxy = np.min(corners_rgb, axis=1)
+    maxxy = np.max(corners_rgb, axis=1)
+    box2d_rgb = np.concatenate([minxy, maxxy], axis=1)
+    alphas = -np.arctan2(-boxes_lidar[:, 1], boxes_lidar[:, 0]) + boxes_lidar[:, 6]
 
-        minxy = np.min(corners_rgb, axis=1)
-        maxxy = np.max(corners_rgb, axis=1)
-
-        box2d_rgb = np.concatenate([minxy, maxxy], axis=1)
-
-        alphas = -np.arctan2(-boxes_lidar[:, 1], boxes_lidar[:, 0]) + boxes_lidar[:, 6]
-
-        predictions_dict = {
-            "bbox": box2d_rgb, "box3d_camera": boxes_cam, "box3d_lidar": boxes_lidar,\
-            "alphas": alphas, "scores": scores, "label_preds": labels, "image_idx": sample_id
-        }
-        
-    return predictions_dict
+    for i, (lb, score, box3d, box2d, alpha) in enumerate(zip(labels, scores, boxes_cam, box2d_rgb, alphas)):
+        if box2d[0] > image_shape[1] or box2d[1] > image_shape[0]:
+            continue
+        if box2d[2] < 0 or box2d[3] < 0:
+            continue
+        box2d[2:] = np.minimum(box2d[2:], image_shape[::-1])
+        box2d[:2] = np.maximum(box2d[:2], [0, 0])
+        hehe["name"].append(class_names[lb])
+        hehe["truncated"].append(0.0)
+        hehe["occluded"].append(0)
+        hehe["alpha"].append(alpha)
+        hehe["bbox"].append(box2d)
+        hehe["dimensions"].append(box3d[[3, 4, 5]])
+        hehe["location"].append(box3d[:3])
+        hehe["rotation_y"].append(box3d[6])
+        hehe["score"].append(score)
+        hehe['image_idx'].append(int(sample_id))
+    try:
+        hehe = {n: np.stack(v) for n, v in hehe.items()}
+    except:
+        return kitti.empty_result_anno()
+    return hehe
 

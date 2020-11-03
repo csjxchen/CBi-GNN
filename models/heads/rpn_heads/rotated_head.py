@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 from dets.tools.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss, weighted_cross_entropy
 from dets.tools.utils.misc import multi_apply
-from dets.tools.bbox3d.target_ops import create_target_torch
+from dets.tools.bbox3d.target_ops import create_target_torch_single, create_target_torch_multi
 from models.heads.head_utils import second_box_decode, second_box_encode
 import dets.tools.bbox3d.box_coders as boxCoders
 from dets.tools.post_processing.bbox_nms import rotate_nms_torch
@@ -46,13 +46,13 @@ class SSDRotateHead(nn.Module):
         else:
             num_cls = num_anchor_per_loc * (num_class + 1)
 
-        self.conv_cls = nn.Conv2d(num_output_filters, num_cls, 1)
+        self.conv_cls = nn.Conv2d(num_output_filters, num_cls * num_class, 1)
         self.conv_box = nn.Conv2d(
-            num_output_filters, num_anchor_per_loc * box_code_size, 1)
+            num_output_filters, num_anchor_per_loc * box_code_size * num_class, 1)
         
         if use_direction_classifier:
             self.conv_dir_cls = nn.Conv2d(
-                num_output_filters, num_anchor_per_loc * 2, 1)
+                num_output_filters, num_anchor_per_loc * 2 * num_class, 1)
         # self.extra_head_cfg = extra_head_cfg
         self.alignment_head_cfg = alignment_head_cfg
         self.init_alignment_head()
@@ -178,8 +178,9 @@ class SSDRotateHead(nn.Module):
             align_head_features = data['align_head_features']
             anchors_mask        = data['anchors_mask']
             gt_bboxes           = data['gt_bboxes']
+            gt_labels           = data['gt_labels']
             anchors             = data['anchors']
-            guided_anchors      = self.get_guided_anchors(*rpn_outs, anchors, anchors_mask, gt_bboxes, thr=0.1)
+            guided_anchors, guided_labels = self.get_guided_anchors(*rpn_outs, anchors, anchors_mask, gt_bboxes, gt_labels, thr=0.1)
             batch_size          = data['batch_size']
             
             if not is_test:
@@ -187,20 +188,20 @@ class SSDRotateHead(nn.Module):
                 bbox_score = self.alignment_head(align_head_features, guided_anchors)
                 alignment_outs = (bbox_score, guided_anchors)
                 return rpn_outs, alignment_outs
+                
             else:
                 bbox_score, guided_anchors = self.alignment_head(align_head_features, guided_anchors, is_test=True)        
-                det_bboxes, det_scores = self.alignment_head.get_rescore_bboxes(guided_anchors, bbox_score, batch_size, data['test_alignment_cfg'])
+                det_bboxes, det_scores, det_labels = self.alignment_head.get_rescore_bboxes(guided_anchors, bbox_score, guided_labels, batch_size, data['test_alignment_cfg'])
                 
-                alignment_outs = (det_bboxes, det_scores)
+                alignment_outs = (det_bboxes, det_scores, det_labels)
                 return rpn_outs, alignment_outs
-
         return rpn_outs, None
 
-    def loss(self, box_preds, cls_preds, dir_cls_preds, gt_bboxes, gt_labels, anchors, anchors_mask, cfg):
+    def single_class_loss(self, box_preds, cls_preds, dir_cls_preds, gt_bboxes, gt_labels, gt_types, anchors, anchors_mask, cfg):
 
         batch_size = box_preds.shape[0]
 
-        labels, targets, ious = multi_apply(create_target_torch,
+        labels, targets, ious = multi_apply(create_target_torch_single,
                                             anchors, gt_bboxes,
                                             anchors_mask, gt_labels,
                                             similarity_fn=getattr(iou3d_utils, cfg.assigner.similarity_fn)(),
@@ -252,31 +253,105 @@ class SSDRotateHead(nn.Module):
             loss += dir_loss_reduced
         
         return dict(rpn_loc_loss=loc_loss_reduced, rpn_cls_loss=cls_loss_reduced, rpn_dir_loss=dir_loss_reduced)
-        
-    def get_guided_anchors(self, box_preds, cls_preds, dir_cls_preds, anchors, anchors_mask, gt_bboxes, thr=.1):
-        
+
+    def multi_class_loss(self, box_preds, cls_preds, dir_cls_preds, gt_bboxes, gt_labels, gt_types, anchors, anchors_mask, cfg):
+
         batch_size = box_preds.shape[0]
-        
+
+        multi_labels = list()
+        multi_targets = list()
+        multi_anchors = list()
+
+        for cls_name, cls_anchor in anchors.items():
+            gt_mask = [torch.BoolTensor(c == cls_name).to(cls_anchor.device) for c in gt_types]
+            labels, targets, ious = multi_apply(create_target_torch_multi,
+                                                cls_anchor, anchors_mask[cls_name],
+                                                gt_bboxes, gt_labels, gt_mask,
+                                                similarity_fn=getattr(iou3d_utils, cfg.assigner.similarity_fn)(),
+                                                box_encoding_fn=second_box_encode,
+                                                matched_threshold=cfg.assigner[cls_name].pos_iou_thr,
+                                                unmatched_threshold=cfg.assigner[cls_name].neg_iou_thr,
+                                                box_code_size=self._box_code_size)
+            multi_labels.append(torch.stack(labels))
+            multi_targets.append(torch.stack(targets))
+            multi_anchors.append(cls_anchor)
+
+        labels = torch.stack(multi_labels, 1)
+        targets = torch.stack(multi_targets, 1)
+        anchors = torch.stack(multi_anchors, 1)
+
+        labels = labels.view(batch_size, -1)
+        targets = targets.view(batch_size, -1, self._box_code_size)
+        anchors = anchors.view(batch_size, -1, self._box_code_size)
+
+        cls_weights, reg_weights, cared = self.prepare_loss_weights(labels)
+
+        cls_targets = labels * cared.type_as(labels)
+
+        loc_loss, cls_loss = self.create_loss(
+            box_preds=box_preds,
+            cls_preds=cls_preds,
+            cls_targets=cls_targets,
+            cls_weights=cls_weights,
+            reg_targets=targets,
+            reg_weights=reg_weights,
+            num_class=self._num_class,
+            encode_rad_error_by_sin=self._encode_rad_error_by_sin,
+            use_sigmoid_cls=self._use_sigmoid_cls,
+            box_code_size=self._box_code_size,
+        )
+
+        loc_loss_reduced = loc_loss / batch_size
+        loc_loss_reduced *= 2
+
+        cls_loss_reduced = cls_loss / batch_size
+        cls_loss_reduced *= 1
+
+        loss = loc_loss_reduced + cls_loss_reduced
+
+        if self._use_direction_classifier:
+            dir_labels = self.get_direction_target(anchors, targets, use_one_hot=False).view(-1)
+            dir_logits = dir_cls_preds.view(-1, 2)
+            weights = (labels > 0).type_as(dir_logits)
+            weights /= torch.clamp(weights.sum(-1, keepdim=True), min=1.0)
+            dir_loss = weighted_cross_entropy(dir_logits, dir_labels,
+                                              weight=weights.view(-1),
+                                              avg_factor=1.)
+
+            dir_loss_reduced = dir_loss / batch_size
+            dir_loss_reduced *= .2
+            loss += dir_loss_reduced
+
+        return dict(rpn_loc_loss=loc_loss_reduced, rpn_cls_loss=cls_loss_reduced, rpn_dir_loss=dir_loss_reduced)
+
+    def get_guided_anchors(self, box_preds, cls_preds, dir_cls_preds, anchors, anchors_mask, gt_bboxes, gt_labels, thr=.1):
+        batch_size = box_preds.shape[0]
+
+        if isinstance(anchors, dict):
+            anchors = torch.cat([v for v in anchors.values()], 1)
+
+        if isinstance(anchors_mask, dict):
+            anchors_mask = torch.cat([v for v in anchors_mask.values()], 1)
+
         batch_box_preds = box_preds.view(batch_size, -1, self._box_code_size)
-        
         batch_anchors_mask = anchors_mask.view(batch_size, -1)
-        
-        batch_cls_preds = cls_preds.view(batch_size, -1)
-        
+        batch_cls_preds = cls_preds.view(batch_size, -1, self._num_class)
         batch_box_preds = second_box_decode(batch_box_preds, anchors)
 
         if self._use_direction_classifier:
             batch_dir_preds = dir_cls_preds.view(batch_size, -1, 2)
 
-        new_boxes = []
+        guided_anchors = []
+        anchor_labels = []
+
         if gt_bboxes is None:
             gt_bboxes = [None] * batch_size
 
-        for box_preds, cls_preds, dir_preds, a_mask, gt_boxes in zip(
-                batch_box_preds, batch_cls_preds, batch_dir_preds, batch_anchors_mask, gt_bboxes
-        ):
-            # print(a_mask.dtype)
-            # print('num', box_preds.shape[0], a_mask.sum())
+        if gt_labels is None:
+            gt_labels = [None] * batch_size
+
+        for box_preds, cls_preds, dir_preds, a_mask, gt_boxes, gt_lbls, in zip(
+                batch_box_preds, batch_cls_preds, batch_dir_preds, batch_anchors_mask, gt_bboxes, gt_labels):
             box_preds = box_preds[a_mask]
             cls_preds = cls_preds[a_mask]
             dir_preds = dir_preds[a_mask]
@@ -289,25 +364,31 @@ class SSDRotateHead(nn.Module):
             else:
                 total_scores = F.softmax(cls_preds, dim=-1)[..., 1:]
 
-            top_scores = torch.squeeze(total_scores, -1)
+            if self._num_class == 1:
+                top_scores = torch.squeeze(total_scores, -1)
+                top_labels = torch.zeros(total_scores.shape[0], dtype=torch.int64)
+            else:
+                top_scores, top_labels = torch.max(total_scores, dim=-1)
 
             selected = top_scores > thr
 
             box_preds = box_preds[selected]
+            top_labels = top_labels[selected]
 
             if self._use_direction_classifier:
                 dir_labels = dir_labels[selected]
-                # print(dir_labels.dtype)
                 opp_labels = (box_preds[..., -1] > 0) ^ dir_labels.byte()
                 box_preds[opp_labels, -1] += np.pi
 
             # add ground-truth
             if gt_boxes is not None:
-                # print(gt_boxes[:, 2])
                 box_preds = torch.cat([gt_boxes, box_preds],0)
+                top_labels = torch.cat([gt_lbls, top_labels],0)
 
-            new_boxes.append(box_preds)
-        return new_boxes
+            anchor_labels.append(top_labels)
+            guided_anchors.append(box_preds)
+
+        return guided_anchors, anchor_labels
 
     def get_guided_dets(self, box_preds, cls_preds, dir_cls_preds, anchors, anchors_mask, gt_bboxes, cfg, thr=.1):
         batch_size = box_preds.shape[0]

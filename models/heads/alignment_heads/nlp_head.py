@@ -7,7 +7,7 @@ from dets.ops.iou3d import iou3d_utils
 from dets.ops.iou3d.iou3d_utils import boxes3d_to_bev_torch, boxes_iou_bev
 from dets.tools.loss.losses import weighted_smoothl1, weighted_sigmoid_focal_loss, weighted_cross_entropy
 from dets.tools.utils.misc import multi_apply
-from dets.tools.bbox3d.target_ops import create_target_torch
+# from dets.tools.bbox3d.target_ops import create_target_torch
 import dets.tools.bbox3d.box_coders as boxCoders
 from dets.tools.post_processing.bbox_nms import rotate_nms_torch
 from functools import partial

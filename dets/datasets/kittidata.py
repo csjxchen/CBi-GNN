@@ -42,11 +42,15 @@ class KittiLiDAR(Dataset):
                  target_encoder=None,
                  out_size_factor=2,
                  test_mode=False,
-                 labels_dir=None
+                 labels_dir=None,
+                 is_analyse=False
                  ):
         super(KittiLiDAR, self).__init__()
         self.root = root    
         self.class_names = class_names
+        self.is_for_multi_classes = False
+        if 'Pedestrian' in self.class_names:
+            self.is_for_multi_classes = True
         self.test_mode = test_mode
         self.with_label = with_label
         self.with_mask = with_mask
@@ -57,12 +61,15 @@ class KittiLiDAR(Dataset):
         
         with open(ann_file, 'r') as f:
             self.sample_ids = list(map(int, f.read().splitlines()))
-        print(f"self.sample_ids {len(self.sample_ids)}")
-        
+        # print(f"self.sample_ids {len(self.sample_ids)}")
+        self.is_analyse = is_analyse
         # delete set_group_flag
         self.img_manager = ImageManager(root, img_norm_cfg=img_norm_cfg, size_divisor=size_divisor)
-        self.auxiliary_tools(augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold)
-
+        if not self.is_for_multi_classes:
+            self.auxiliary_tools(augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold)
+        else:
+            self.auxiliary_tools_for_multi_classes(augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold)
+    
     def auxiliary_tools(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
         # give dict args 
         self.augmentor = obj_from_dict(augmentor, point_augmentor) if augmentor else None
@@ -80,6 +87,7 @@ class KittiLiDAR(Dataset):
             '''
             feature_map_size = self.generator.grid_size[:2] // self.out_size_factor
             feature_map_size = [*feature_map_size, 1][::-1]
+
             anchor_generator = obj_from_dict(anchor_generator, anchor3d_generator)
             anchors = anchor_generator(feature_map_size)
             self.anchors = anchors.reshape([-1, 7])
@@ -89,6 +97,34 @@ class KittiLiDAR(Dataset):
         else:
             self.anchors=None
     
+    def auxiliary_tools_for_multi_classes(self, augmentor, generator, target_encoder, anchor_generator, out_size_factor, anchor_area_threshold):
+        # give dict args 
+        self.augmentor = obj_from_dict(augmentor, point_augmentor) if augmentor else None
+        self.generator = obj_from_dict(generator, voxel_generator) if generator else None
+        self.target_encoder = obj_from_dict(target_encoder, bbox3d_target) if target_encoder else None
+        self.out_size_factor = out_size_factor
+        self.anchor_area_threshold = anchor_area_threshold
+        # anchor
+        if anchor_generator is not None:
+            ''' 
+                            z
+                            |  x
+                            | /
+                    y_______|/
+            '''
+            feature_map_size = self.generator.grid_size[:2] // self.out_size_factor
+            feature_map_size = [*feature_map_size, 1][::-1]
+            anchor_generator = {cls:obj_from_dict(cfg, anchor3d_generator) for cls, cfg in anchor_generator.items()}
+            if self.test_mode:
+                self.anchors = np.concatenate([v(feature_map_size).reshape(-1, 7) for v in anchor_generator.values()], 0)
+                self.anchors_bv = rbbox2d_to_near_bbox(self.anchors[:, [0, 1, 3, 4, 6]])
+            
+            else:
+                self.anchors = {k:v(feature_map_size).reshape(-1, 7) for k, v in anchor_generator.items()}
+                self.anchors_bv = {k: rbbox2d_to_near_bbox(v[:, [0, 1, 3, 4, 6]]) for k, v in self.anchors.items()}
+        else:
+            self.anchors=None
+
     def __len__(self):
         return len(self.sample_ids)
     
@@ -136,7 +172,8 @@ class KittiLiDAR(Dataset):
         # initial anchors for one-stage detector 
         if self.anchors is not None:
             # print("using andchors mask!!!")
-            data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32)))
+            data['anchors'] = DC(to_tensor(self.anchors.astype(np.float32))) if not self.is_for_multi_classes  else\
+                            {k: DC(to_tensor(v.astype(np.float32))) for k, v in self.anchors.items()}
             # data['anchors'] = to_tensor(self.anchors.astype(np.float32))
         # if with_mask
         if self.with_mask:
@@ -144,6 +181,7 @@ class KittiLiDAR(Dataset):
 
         if self.with_point:
             points = read_lidar(osp.join(self.lidar_prefix, '%06d.bin' % sample_id))
+        
 
         if self.augmentor is not None and self.test_mode is False:
             sampled_gt_boxes, sampled_gt_types, sampled_points = self.augmentor.sample_all(gt_bboxes, gt_types)
@@ -160,16 +198,16 @@ class KittiLiDAR(Dataset):
             # paste sampled points to the scene
             points = np.concatenate([sampled_points, points], axis=0)
             
-            # select the interest classes
-            selected = [i for i in range(len(gt_types)) if gt_types[i] in self.class_names]
-            gt_bboxes = gt_bboxes[selected, :]
-            gt_types = [gt_types[i] for i in range(len(gt_types)) if gt_types[i] in self.class_names]
-
-            # force van to have same label as car
             gt_types = ['Car' if n == 'Van' else n for n in gt_types]
+            gt_types = np.array(gt_types)
+            # select the interest classes
+            selected = [i for i in range(len(gt_types)) if gt_types[i] in self.class_names] 
+            gt_types = gt_types[selected]
+            gt_bboxes = gt_bboxes[selected, :]
             gt_labels = np.array([self.class_names.index(n) + 1 for n in gt_types], dtype=np.int64)
             
             self.augmentor.noise_per_object_(gt_bboxes, points, num_try=100)
+
             gt_bboxes, points = self.augmentor.random_flip(gt_bboxes, points)
             gt_bboxes, points = self.augmentor.global_rotation(gt_bboxes, points)
             gt_bboxes, points = self.augmentor.global_scaling(gt_bboxes, points)
@@ -197,24 +235,33 @@ class KittiLiDAR(Dataset):
                     coordinates, tuple(grid_size[::-1][1:]))
                 dense_voxel_map = dense_voxel_map.cumsum(0)
                 dense_voxel_map = dense_voxel_map.cumsum(1)
-                if self.with_mask:
-                    anchors_area = fused_get_anchors_area(
-                        dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
-                    anchors_mask = anchors_area > self.anchor_area_threshold
-                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
+
+                if self.is_for_multi_classes:
+                    anchors_mask = dict()
+                    for k, v in self.anchors_bv.items():
+                        mask = fused_get_anchors_area(
+                        dense_voxel_map, v, voxel_size, pc_range, grid_size) > self.anchor_area_threshold
+                        anchors_mask[k] = DC(to_tensor(mask.astype(np.uint8)))
+                    data['anchors_mask'] = anchors_mask
+
                 else:
-                    N = self.anchors_bv.shape[0]
-                    anchors_area = np.ones((N), dtype=np.float32) + 10
-                    anchors_mask = anchors_area > self.anchor_area_threshold
-                    # print(N, anchors_mask.sum())
-                    data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
-            
+                    if self.with_mask:
+                        anchors_area = fused_get_anchors_area(
+                        dense_voxel_map, self.anchors_bv, voxel_size, pc_range, grid_size)
+                        anchors_mask = anchors_area > self.anchor_area_threshold
+                        data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
+                    else:
+                        N = self.anchors_bv.shape[0]
+                        anchors_area = np.ones((N), dtype=np.float32) + 10
+                        anchors_mask = anchors_area > self.anchor_area_threshold
+                        # print(N, anchors_mask.sum())
+                        data['anchors_mask'] = DC(to_tensor(anchors_mask.astype(np.uint8)))
             # filter gt_bbox out of range
             bv_range = self.generator.point_cloud_range[[0, 1, 3, 4]]
             mask = filter_gt_box_outside_range(gt_bboxes, bv_range)
             gt_bboxes = gt_bboxes[mask]
             gt_labels = gt_labels[mask]
-
+            gt_types = gt_types[mask]
         else:
             NotImplementedError
         
@@ -229,6 +276,8 @@ class KittiLiDAR(Dataset):
         if self.with_label:
             data['gt_labels'] = DC(to_tensor(gt_labels))
             data['gt_bboxes'] = DC(to_tensor(gt_bboxes))
+            data['gt_types']  = DC(gt_types, cpu_only=True)
+
             # data['gt_labels'] = to_tensor(gt_labels)
             # data['gt_bboxes'] = to_tensor(gt_bboxes)
         return data
@@ -246,15 +295,23 @@ class KittiLiDAR(Dataset):
         if self.with_label:
             objects = read_label(osp.join(self.label_prefix, '%06d.txt' % sample_id))
             gt_bboxes = [obj.box3d for obj in objects if obj.type in self.class_names]
+            objects = [obj for obj in objects if obj.type in self.class_names]
+            gt_types = [object.type for object in objects if object.type in self.class_names]
+
             if len(gt_bboxes) != 0:
                 gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
                 gt_labels = np.ones(len(gt_bboxes), dtype=np.int64)
                 # transfer from cam to lidar coordinates
                 gt_bboxes[:, :3] = project_rect_to_velo(gt_bboxes[:, :3], calib)
+                
+                gt_types = ['Car' if n == 'Van' else n for n in gt_types]
+                gt_types = np.array(gt_types)
+                # select the interest classes
+                gt_labels = np.array([self.class_names.index(n) + 1 for n in gt_types], dtype=np.int64)
             else:
                 gt_bboxes = None
                 gt_labels = None
-        
+                gt_types  = None
         img_meta = dict(
             img_shape=img_shape,
             sample_idx=sample_id,
@@ -312,10 +369,16 @@ class KittiLiDAR(Dataset):
         if self.with_label:
             data['gt_labels'] = DC(to_tensor(gt_labels), cpu_only=True)
             data['gt_bboxes'] = DC(to_tensor(gt_bboxes), cpu_only=True)
+            data['gt_types'] = DC(gt_types, cpu_only=True)
+
+            if self.is_analyse:
+                data['objects'] = DC(objects, cpu_only=True)
+            # data[]
         else:
             data['gt_labels'] = DC(None, cpu_only=True)
             data['gt_bboxes'] = DC(None, cpu_only=True)
-        
+            data['gt_types'] = DC(gt_types, cpu_only=True)
+
         return data
     
     @staticmethod

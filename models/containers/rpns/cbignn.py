@@ -46,27 +46,24 @@ class CBIGNN(RPN):
         
         img_meta = data.pop('img_meta')
         img = data.pop('img')
-        batch_size =  len(img_meta)
+        batch_size = len(img_meta)
         data = self.merge_second_batch(data)
         voxel_x = self.backbone(features=data['voxels'])
         neck_outs = self.neck({"voxel_input": voxel_x,  "coords":data['coordinates'], "batch_size": batch_size})
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
-                    "gt_bboxes": data['gt_bboxes'],
-                    "anchors": data['anchors'],
-                    "batch_size": batch_size 
+                "gt_bboxes": data['gt_bboxes'],
+                "gt_labels": data["gt_labels"],
+                "anchors": data['anchors'],
+                "batch_size": batch_size 
                 })
-        # data [dict]: with keys (rpn_head_features, 
-        #                     [align_head_features, 
-        #                     anchors_mask,
-        #                     gt_bboxes,
-        #                     anchors,
-        #                     batch_size
-        #                     ])
+        
         rpn_outs, alignment_outs = self.rpn_head(neck_outs)
         # achieve loss for rpn
-        rpn_loss_inputs = rpn_outs + (data['gt_bboxes'], data['gt_labels'],  data['anchors'], data['anchors_mask'], self.train_cfg) 
-        rpn_losses = self.rpn_head.loss(*rpn_loss_inputs)
+        rpn_loss_inputs = rpn_outs + (data['gt_bboxes'], data['gt_labels'], data['gt_types'], data['anchors'], data['anchors_mask'], self.train_cfg) 
+        rpn_losses = self.rpn_head.multi_class_loss(*rpn_loss_inputs) if isinstance(data['anchors_mask'], dict) else\
+                    self.rpn_head.single_class_loss(*rpn_loss_inputs)
+        
         losses.update(rpn_losses)
         
         if alignment_outs:
@@ -81,14 +78,13 @@ class CBIGNN(RPN):
         
         img = data.pop('img')
         
-        batch_size =  len(img_meta)
+        batch_size = len(img_meta)
         
         data = self.merge_second_batch(data)
         
         voxel_x = self.backbone(features=data['voxels'])
         
-        neck_outs = self.neck({"voxel_input": voxel_x,  "coords":data['coordinates'], "batch_size": batch_size})
-
+        neck_outs = self.neck({"voxel_input": voxel_x, "coords":data['coordinates'], "batch_size": batch_size})
         # prepare data for rpn_head
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
@@ -101,8 +97,9 @@ class CBIGNN(RPN):
         rpn_outs, alignment_outs = self.rpn_head(neck_outs, is_test=True)
         
         if alignment_outs:
-            results = [kitti_bbox2results(*param) for param in zip(*alignment_outs, img_meta)]
+            results = [kitti_bbox2results(*param, class_names=self.class_names) for param in zip(*alignment_outs, img_meta)]
         else:
+            #! TO RELEASE
             det_bboxes, det_scores = self.rpn_head.get_guided_dets(*rpn_outs, data['anchors'], data['anchors_mask'], None, self.test_cfg, thr=0.3)
             results = [kitti_bbox2results(*param) for param in zip(det_bboxes, det_scores, img_meta)]
 

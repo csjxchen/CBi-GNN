@@ -38,11 +38,14 @@ class RPN(nn.Module):
                     coors.append(coor_pad)
                 ret[key] = torch.cat(coors, dim=0)
             elif key in [
-                'img_meta', 'gt_labels', 'gt_bboxes',
+                'img_meta', 'gt_labels', 'gt_bboxes', 'gt_types'
             ]:
                 ret[key] = elems
             else:
-                ret[key] = torch.stack(elems, dim=0)
+                if isinstance(elems, dict):
+                    ret[key] = {k: torch.stack(v, dim=0) for k, v in elems.items()}
+                else:
+                    ret[key] = torch.stack(elems, dim=0)
         return ret
     # @abstractmethod
     
@@ -51,7 +54,7 @@ class RPN(nn.Module):
             return self.forward_train(data)
         else:
             return self.forward_test(data)
-
+    
     @abstractmethod
     def forward_train(self, data):
         pass

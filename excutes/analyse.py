@@ -28,11 +28,12 @@ import warnings
 import logging
 from numba import NumbaWarning
 from dets.ops.iou3d import iou3d_utils
-
+# with tqdm.trange(start_epoch, total_epochs, desc='epochs', dynamic_ncols=True, leave=(rank == 0)) as tbar:
+import tqdm
 def parse_args():
     parser = argparse.ArgumentParser(description='MMDet test detector')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('analyse_dir', type=str, default='../analyse', help='test config file path')
+    # parser.add_argument('--config', default='../configs/cbignn_pswarp_v1.py',  type=str, help='test config file path')
+    parser.add_argument('--analyse_dir', default='../analyse', type=str, help='test config file path')
     
     args = parser.parse_args()
     return args
@@ -42,44 +43,101 @@ def contrast_difference(gt_dataloader, predicts_dataloaders, iou_fns, iou_thresh
     assert len(predicts_dataloaders) == 2
     for _dataloader in predicts_dataloaders:
         assert len(_dataloader) == len(gt_dataloader)
+    gt_template_str = " ".join(['{:.4f}' for _ in pred_prefixes]) + " " + " ".join(['{:.4f}' for _ in pred_prefixes]) + '\n'
+    pred_template_str = " ".join(['{:.4f}' for _ in iou_fns]) + '\n'
+    data_template = '{} ' + ' '.join(['{:.4f}' for _ in range(15)])
+
+    
+    
     data_len = len(gt_dataloader)
+    pbar = tqdm.tqdm(total=data_len, leave=False, desc='processing', dynamic_ncols=True)
     gt_dataloader_iter = iter(gt_dataloader)
     dataloader_iters = [iter(_dataloader) for _dataloader in predicts_dataloaders]
-    gt_samples_str = 'gt_instance'
-    for i, gt_data in enumerate(gt_dataloader):
+    # gt_samples_str = 'gt_instance'
+    gt_str = ".".join(pred_prefixes)
+    for i in range(data_len):
+        gt_data = next(gt_dataloader_iter)
         sample_id = gt_data['img_meta'].data[0][0]['sample_idx'] 
         gt_boxes = gt_data['gt_bboxes'].data[0][0]
+
         predict_data1 = next(dataloader_iters[0])
         predict_data2 = next(dataloader_iters[1])
+        gt_objects =  gt_data['objects'].data[0][0]
+        pred1_objects =  predict_data1['objects'].data[0][0]
+        pred2_objects =  predict_data2['objects'].data[0][0]
+
+
+        
         predict_labels1 = predict_data1['gt_labels']
         predict_boxes1 = predict_data1['gt_bboxes'].data[0][0]
+        
         predict_labels2 = predict_data2['gt_labels']
         predict_boxes2 = predict_data2['gt_bboxes'].data[0][0]
+
+        predict_1_file = os.path.join(save_dir, pred_prefixes[0], '%06d.txt' % sample_id)
+        predict_2_file = os.path.join(save_dir, pred_prefixes[1], '%06d.txt' % sample_id)
+        gt_file = os.path.join(save_dir, gt_str, '%06d.txt' % sample_id)
+
         if gt_boxes is not None:
-            gt_ious_3d_1 = iou_fns[0](gt_boxes.cuda(), predict_boxes1.cuda()) if predict_boxes1 is not None else torch.zeros(len(gt_boxes), 1)
-            gt_ious_3d_2 = iou_fns[0](gt_boxes.cuda(), predict_boxes2.cuda()) if predict_boxes2 is not None else torch.zeros(len(gt_boxes), 1)
-            gt_ious_max_3d_1 = gt_ious_3d_1.max(dim=0, keepdim=True)
-            gt_ious_max_3d_2 = gt_ious_3d_2.max(dim=0, keepdim=True)
+            gt_ious_3d_1 = iou_fns[0](gt_boxes.cuda(), predict_boxes1.cuda()) if predict_boxes1 is not None else torch.zeros(len(gt_boxes), 1).cuda()
+            gt_ious_3d_2 = iou_fns[0](gt_boxes.cuda(), predict_boxes2.cuda()) if predict_boxes2 is not None else torch.zeros(len(gt_boxes), 1).cuda()
+            gt_ious_max_3d_1, _ = gt_ious_3d_1.max(dim=1, keepdim=True)
+            gt_ious_max_3d_2, _ = gt_ious_3d_2.max(dim=1, keepdim=True)
             gt_ious_max_3ds = torch.cat([gt_ious_max_3d_1, gt_ious_max_3d_2], dim=1)
 
+            gt_ious_bev_1 = iou_fns[1](gt_boxes.cuda(), predict_boxes1.cuda()) if predict_boxes1 is not None else torch.zeros(len(gt_boxes), 1).cuda()
+            gt_ious_bev_2 = iou_fns[1](gt_boxes.cuda(), predict_boxes2.cuda()) if predict_boxes2 is not None else torch.zeros(len(gt_boxes), 1).cuda()
+            # gt_ious_bev_1 = iou_fns[1](gt_boxes.cuda(), predict_boxes1.cuda()) if predict_boxes1 is not None else torch.zeros(len(gt_boxes), 1).cuda()
+            gt_ious_max_bev_1, _ = gt_ious_bev_1.max(dim=1, keepdim=True)
+            gt_ious_max_bev_2, _ = gt_ious_bev_2.max(dim=1, keepdim=True)
+            gt_ious_max_bevs = torch.cat([gt_ious_max_bev_1, gt_ious_max_bev_2], dim=1)
+            with open(gt_file, 'w+') as f:
+                for _ious_max_3ds, _ious_max_bevs, obj in zip(gt_ious_max_3ds, gt_ious_max_bevs, gt_objects):
+                    iou_line = gt_template_str.format(*_ious_max_3ds, *_ious_max_bevs)
+                    data_line = data_template.format(obj.type, obj.truncation, obj.occlusion, obj.alpha, *obj.box2d, obj.h, obj.w, obj.l, *obj.t, obj.ry, obj.score)
 
+                    f.write(data_line + ' ' + iou_line)
+        else:
+            f = open(gt_file, 'w+')
+            f.close()
+                
+        if predict_boxes1 is not None:
+            pred_ious_3d_1 = gt_ious_3d_1 if gt_boxes is not None else torch.zeros(1, len(predict_boxes1)).cuda()
+            pred_ious_bev_1 = gt_ious_bev_1 if gt_boxes is not None else torch.zeros(1, len(predict_boxes1)).cuda()
+            pred_ious_max_bev_1, _ = pred_ious_bev_1.max(dim=0, keepdim=True)
+            pred_ious_max_3d_1, _ = pred_ious_3d_1.max(dim=0, keepdim=True)
+            pred_1_ious = torch.cat([pred_ious_max_3d_1, pred_ious_max_bev_1], dim=0).transpose(0, 1)
+            with open(predict_1_file, 'w+') as f:
+                for _ious_max, obj in zip(pred_1_ious, pred1_objects):
+                    iou_line = pred_template_str.format(*_ious_max)
+                    data_line = data_template.format(obj.type, obj.truncation, obj.occlusion, obj.alpha, *obj.box2d, obj.h, obj.w, obj.l, *obj.t, obj.ry, obj.score)
 
-            # gt_ious_bev = iou_fns[0](gt_boxes.cuda(), predict_boxes1.cuda()) if predict_boxes1 is not None else  torch.zeros(len(gt_boxes))
-            
+                    f.write(data_line + ' ' + iou_line)
+        else:
+            f = open(predict_1_file, 'w+')
+            f.close()
+        if predict_boxes2 is not None:
+            pred_ious_3d_2 = gt_ious_3d_2 if gt_boxes is not None else torch.zeros(1, len(predict_boxes2)).cuda()
+            pred_ious_bev_2 = gt_ious_bev_2 if gt_boxes is not None else torch.zeros(1, len(predict_boxes2)).cuda()
+            pred_ious_max_bev_2, _ = pred_ious_bev_2.max(dim=0, keepdim=True)
+            pred_ious_max_3d_2, _ = pred_ious_3d_2.max(dim=0, keepdim=True)
+            pred_2_ious = torch.cat([pred_ious_max_3d_2, pred_ious_max_bev_2], dim=0).transpose(0, 1)
+            with open(predict_2_file, 'w+') as f:
+                for _ious_max, obj in zip(pred_2_ious, pred2_objects):
+                    iou_line = pred_template_str.format(*_ious_max)
+                    data_line = data_template.format(obj.type, obj.truncation, obj.occlusion, obj.alpha, *obj.box2d, obj.h, obj.w, obj.l, *obj.t, obj.ry, obj.score)
 
-        # if gt_boxes is not None or  predict_boxes1 is not None or predict_boxes2 is not None: 
-        #     gt_boxes =  gt_boxes.cuda() if gt_boxes is not None else torch.zeros(1, 7).cuda()
-        #     predict_boxes1 = predict_boxes1.cuda() if predict_boxes1 is not None else torch.zeros(1, 7).cuda()
-        #     predict_boxes2 = predict_boxes2.cuda() if predict_boxes2 is not None else torch.zeros(1, 7).cuda()
-        #     ious = iou_fns[0](gt_boxes, predict_boxes1)
+                    f.write(data_line + ' ' + iou_line)
+        else:
+            f = open(predict_2_file, 'w+')
+            f.close()
+        pbar.update()
+        pbar.set_postfix(dict(it=f"{i+1}/{data_len}"))
+
         
-        # else:
-        #     continue
         
-
-
-def main(argss):
-    configs = '../configs/light_cbignn_pswarp_v2.py'
+def main(args):
+    configs = '../configs/analyse_gt.py'
     pred_prefixes = ['cbignn_pswarp_v2', 'cbignn_pswarp_v3']
     contrast_files = ['/chenjiaxin/research/CBi-GNN/experiments/reproduce/cbignn_pswarp_v2/50_p40_docker_env_outs',  '../experiments/reproduce/cbignn_pswarp_v3/50_docker_p40_v3_outs']
     iou_fns = ['RotateIou3dSimilarity', 'RotateIou2dSimilarity']
@@ -88,6 +146,12 @@ def main(argss):
     ann_file = gt_root_path + '../ImageSets/val.txt',
     save_dir = args.analyse_dir
     mmcv.mkdir_or_exist(save_dir)
+    mmcv.mkdir_or_exist(os.path.join(save_dir, pred_prefixes[0]))
+    mmcv.mkdir_or_exist(os.path.join(save_dir, pred_prefixes[1]))
+    gt_str = ".".join(pred_prefixes)
+    mmcv.mkdir_or_exist(os.path.join(save_dir, gt_str))
+
+    # os.makedirs()
     iou_threshold = [0.5, 0.7]
     cfg = mmcv.Config.fromfile(configs)
     cfg_name = os.path.splitext(os.path.basename(configs))[0]
@@ -116,7 +180,8 @@ def main(argss):
                             dist=False) for dataset in predicts_datasets]
 
 
-    contrast_difference(gt_dataloader, predicts_dataloaders, iou_fns, iou_threshold)
+    contrast_difference(gt_dataloader, predicts_dataloaders, iou_fns, iou_threshold, save_dir, pred_prefixes)
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    main(args)
