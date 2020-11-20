@@ -396,7 +396,7 @@ def create_target_torch_multi(all_anchors,
             labels[bg_inds] = 0
             # re-enable anchors_with_max_overlap
             labels[anchors_with_max_overlap] = gt_classes[gt_inds_force]
-
+    
     bbox_targets = torch.zeros(
         (num_inside, box_code_size), dtype=all_anchors.dtype, device=gt_boxes.device)
 

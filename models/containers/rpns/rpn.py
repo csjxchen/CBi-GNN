@@ -13,7 +13,9 @@ class RPN(nn.Module):
         # for k, m in self.model_cfg.items():
             # eval_model_str = f"self.{k} = {m.type}(**m)"
             # eval(eval_model_str)
-    
+        self.class_names = []
+        for k in train_cfg.assigner.keys():
+            self.class_names.append(k)
     @abstractmethod
     def init_architecture(self):
         pass
@@ -54,7 +56,7 @@ class RPN(nn.Module):
             return self.forward_train(data)
         else:
             return self.forward_test(data)
-    
+
     @abstractmethod
     def forward_train(self, data):
         pass

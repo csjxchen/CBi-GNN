@@ -132,7 +132,7 @@ class SSDRotateHead(nn.Module):
                     encode_rad_error_by_sin=True,
                     box_code_size=7):
         batch_size = int(box_preds.shape[0])
-        box_preds = box_preds.view(batch_size, -1, box_code_size)
+        box_preds  = box_preds.view(batch_size, -1, box_code_size)
         if use_sigmoid_cls:
             cls_preds = cls_preds.view(batch_size, -1, num_class)
         else:
@@ -188,7 +188,7 @@ class SSDRotateHead(nn.Module):
                 bbox_score = self.alignment_head(align_head_features, guided_anchors)
                 alignment_outs = (bbox_score, guided_anchors)
                 return rpn_outs, alignment_outs
-                
+
             else:
                 bbox_score, guided_anchors = self.alignment_head(align_head_features, guided_anchors, is_test=True)        
                 det_bboxes, det_scores, det_labels = self.alignment_head.get_rescore_bboxes(guided_anchors, bbox_score, guided_labels, batch_size, data['test_alignment_cfg'])
@@ -276,11 +276,11 @@ class SSDRotateHead(nn.Module):
             multi_targets.append(torch.stack(targets))
             multi_anchors.append(cls_anchor)
 
-        labels = torch.stack(multi_labels, 1)
+        labels  = torch.stack(multi_labels, 1)
         targets = torch.stack(multi_targets, 1)
         anchors = torch.stack(multi_anchors, 1)
-
-        labels = labels.view(batch_size, -1)
+        
+        labels  = labels.view(batch_size, -1)
         targets = targets.view(batch_size, -1, self._box_code_size)
         anchors = anchors.view(batch_size, -1, self._box_code_size)
 
@@ -389,7 +389,7 @@ class SSDRotateHead(nn.Module):
             guided_anchors.append(box_preds)
 
         return guided_anchors, anchor_labels
-
+    
     def get_guided_dets(self, box_preds, cls_preds, dir_cls_preds, anchors, anchors_mask, gt_bboxes, cfg, thr=.1):
         batch_size = box_preds.shape[0]
         batch_box_preds = box_preds.view(batch_size, -1, self._box_code_size)

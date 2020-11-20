@@ -104,7 +104,7 @@ model = dict(
             bbox_head=dict(
                 type='SSDRotateHead',
                 args=dict(
-                    num_class=2,
+                    num_class=3,
                     num_output_filters=256,
                     num_anchor_per_loc=2,
                     use_sigmoid_cls=True,
@@ -130,6 +130,11 @@ model = dict(
 train_cfg = dict(
     rpn=dict(
         assigner=dict(
+            Car=dict(
+                pos_iou_thr=0.6,
+                neg_iou_thr=0.45,
+                min_pos_iou=0.45, # this one is to limit the force assignment
+            ),
             Pedestrian=dict(
                 pos_iou_thr=0.5,
                 neg_iou_thr=0.35,
@@ -140,6 +145,7 @@ train_cfg = dict(
                 neg_iou_thr=0.35,
                 min_pos_iou=0.35,  # this one is to limit the force assignment
             ),
+
             ignore_iof_thr=-1,
             similarity_fn='NearestIouSimilarity'
         ),
@@ -199,14 +205,14 @@ data=dict(
         with_mask=True,
         with_label=True,
         with_point=True,
-        class_names = ['Pedestrian', 'Cyclist'],
+        class_names = ['Car', 'Pedestrian', 'Cyclist'],
         augmentor=dict(
             type='PointAugmentor',
             root_path=data_root,
             info_path=data_root + 'kitti_dbinfos_train.pkl',
-            sample_classes=['Pedestrian', 'Cyclist'],
-            min_num_points=[5, 5],
-            sample_max_num=[10, 10],
+            sample_classes=['Car', 'Pedestrian', 'Cyclist'],
+            min_num_points=[5, 5, 5],
+            sample_max_num=[15, 10, 10],
             removed_difficulties=[-1],
             global_rot_range=[-0.78539816, 0.78539816],
             gt_rot_range=[-0.78539816, 0.78539816],
@@ -221,19 +227,25 @@ data=dict(
             max_voxels=20000
         ),
         anchor_generator=dict(
+            Car=dict(
+                type='AnchorGeneratorStride',
+                sizes=[1.6, 3.9, 1.56],
+                anchor_strides=[0.4, 0.4, 1.0],
+                anchor_offsets=[0.2, -39.8, -1.78],
+                rotations=[0, 1.57]),
            Pedestrian=dict(
                 type='AnchorGeneratorStride',
                 sizes=[0.6, 0.8, 1.73],
                 anchor_strides=[0.4, 0.4, 1.0],
                 anchor_offsets=[0.2, -39.8, -1.78],
-                rotations=[0, 1.57],
+                rotations=[0, 1.57]
             ),
             Cyclist=dict(
                 type='AnchorGeneratorStride',
                 sizes=[0.6, 1.76, 1.73],
                 anchor_strides=[0.4, 0.4, 1.0],
                 anchor_offsets=[0.2, -39.8, -1.78],
-                rotations=[0, 1.57],
+                rotations=[0, 1.57]
             )
         ),
         anchor_area_threshold=1,
@@ -252,7 +264,7 @@ data=dict(
         with_mask=True,
         with_label=False,
         with_point=True,
-        class_names = ['Pedestrian', 'Cyclist'],
+        class_names = ['Car', 'Pedestrian', 'Cyclist'],
         generator=dict(
             type='VoxelGenerator',
             voxel_size=[0.05, 0.05, 0.1],
@@ -261,7 +273,13 @@ data=dict(
             max_voxels=20000
         ),
         anchor_generator=dict(
-            Pedestrian=dict(
+            Car=dict(
+                type='AnchorGeneratorStride',
+                sizes=[1.6, 3.9, 1.56],
+                anchor_strides=[0.4, 0.4, 1.0],
+                anchor_offsets=[0.2, -39.8, -1.78],
+                rotations=[0, 1.57]),
+           Pedestrian=dict(
                 type='AnchorGeneratorStride',
                 sizes=[0.6, 0.8, 1.73],
                 anchor_strides=[0.4, 0.4, 1.0],
@@ -272,7 +290,8 @@ data=dict(
                 type='AnchorGeneratorStride',
                 sizes=[0.6, 1.76, 1.73],
                 anchor_strides=[0.4, 0.4, 1.0],
-                anchor_offsets=[0.2, -39.8, -1.78],   
+                anchor_offsets=[0.2, -39.8, -1.78],
+                rotations=[0, 1.57],
             )),
         anchor_area_threshold=1,
         out_size_factor=8,
@@ -296,7 +315,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/persons_debug'
+exp_dir = '../experiments/reproduce/multi_class'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

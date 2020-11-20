@@ -62,7 +62,7 @@ class AlignmentHead(nn.Module):
         negatives = labels == 0
         negative_cls_weights = negatives.type(torch.float32)
         cls_weights = negative_cls_weights + positives.type(torch.float32)
-        
+
         pos_normalizer = positives.sum().type(torch.float32)
         cls_weights /= torch.clamp(pos_normalizer, min=1.0)
 
@@ -103,13 +103,13 @@ class AlignmentHead(nn.Module):
     #         det_bboxes.append(bbox_pred.detach().cpu().numpy())
     #         det_scores.append(scores.detach().cpu().numpy())
     #     return det_bboxes, det_scores
-    def get_rescore_bboxes(self, guided_anchors, cls_scores, anchor_labels, img_metas, cfg):
+    def get_rescore_bboxes(self, guided_anchors, cls_scores, anchor_labels, batch_size, cfg):
         
         det_bboxes = list()
         det_scores = list()
         det_labels = list()
 
-        for i in range(len(img_metas)):
+        for i in range(batch_size):
             bbox_pred = guided_anchors[i]
             scores = cls_scores[i]
             labels = anchor_labels[i]

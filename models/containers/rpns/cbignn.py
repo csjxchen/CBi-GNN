@@ -89,6 +89,7 @@ class CBIGNN(RPN):
         neck_outs.update(
                 {"anchors_mask":data["anchors_mask"],
                 "gt_bboxes": data['gt_bboxes'],
+                "gt_labels": data['gt_labels'],
                 "anchors":  data['anchors'],
                 "batch_size": batch_size,
                 'test_alignment_cfg':self.test_cfg.alignment
@@ -97,7 +98,7 @@ class CBIGNN(RPN):
         rpn_outs, alignment_outs = self.rpn_head(neck_outs, is_test=True)
         
         if alignment_outs:
-            results = [kitti_bbox2results(*param, class_names=self.class_names) for param in zip(*alignment_outs, img_meta)]
+            results = [kitti_bbox2results(*param) for param in zip(*alignment_outs, img_meta)]
         else:
             #! TO RELEASE
             det_bboxes, det_scores = self.rpn_head.get_guided_dets(*rpn_outs, data['anchors'], data['anchors_mask'], None, self.test_cfg, thr=0.3)

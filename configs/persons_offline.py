@@ -242,8 +242,8 @@ data=dict(
 
     val=dict(
         type=dataset_type,
-        root=data_root + 'testing/',
-        ann_file=data_root + '../ImageSets/test.txt',
+        root=data_root + 'training/',
+        ann_file=data_root + '../ImageSets/val.txt',
         img_prefix=None,
         # img_scale=(1242, 375),
         img_norm_cfg=img_norm_cfg,
@@ -290,13 +290,13 @@ lr_config = dict(
     div_factor = 10,
     pct_start = 0.4
 )
-checkpoint_config = dict(interval=2)
+checkpoint_config = dict(interval=1)
 log_config = dict(interval=50)
 
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/persons_debug'
+exp_dir = '../experiments/reproduce/persons_offline'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

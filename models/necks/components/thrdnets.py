@@ -14,6 +14,62 @@ from .neck_utils import *
 
 structured_forward_fn = {'v1': structured_forward_v1, 'pcs':structured_forward_pcs}
 
+class SECONDNET(nn.Module):
+    def __init__(self, model_cfg):
+        super(SECONDNET, self).__init__()
+        norm_fn = partial(nn.BatchNorm1d, eps=1e-3, momentum=0.01)
+        # self.use_voxel_feature = use_voxel_feature
+        self.model_cfg = model_cfg
+        self.conv_input = spconv.SparseSequential(
+            spconv.SubMConv3d(self.model_cfg.conv_inputs[0],  self.model_cfg.conv_inputs[1], 3, padding=1, bias=False, indice_key='subm0'),
+            norm_fn(self.model_cfg.conv_inputs[1]),
+            nn.ReLU(),
+        )
+        block = post_act_block
+        self.downsample_layers = nn.ModuleList()
+        for layer_dict in self.model_cfg.downsample_layers: 
+            # for l in layers:
+            assert len(layer_dict['types']) == len(layer_dict['indice_keys']), f"{len(layer_dict['types'])} == {len(layer_dict['indice_keys'])}?"
+            assert len(layer_dict['types']) == (len(layer_dict['filters'])-1), f"{len(layer_dict['types'])} == {len(layer_dict['filters'])-1}?"
+            _sequentials = []
+            
+            for i in range(len(layer_dict['types'])):
+                _sequentials.append(block(
+                                    layer_dict['filters'][i], 
+                                    layer_dict['filters'][i + 1], 
+                                    3, 
+                                    stride=layer_dict['strides'][i],
+                                    norm_fn=norm_fn, 
+                                    padding=layer_dict['paddings'][i] if len(layer_dict['paddings'][i]) > 1 else layer_dict['paddings'][i][0],
+                                    conv_type=layer_dict['types'][i],
+                                    indice_key=layer_dict['indice_keys'][i]))
+            
+            self.downsample_layers.append(spconv.SparseSequential(*_sequentials))                
+
+        last_pad = (0, 0, 0)
+        
+        out_channels = self.model_cfg.downsample_layers[-1]['filters'][-1]
+        
+        self.conv4_out = spconv.SparseSequential(
+            spconv.SparseConv3d(out_channels, 64, (1, 1, 1), stride=(1, 1, 1), padding=last_pad,
+                                bias=False, indice_key='spconv_down2'),
+            norm_fn(64),
+            nn.ReLU(),
+        )
+
+    def forward(self, x, **kwargs):
+        rx_list = []
+        x = self.conv_input(x)
+        conv_inputs = x
+        for i, layer in enumerate(self.downsample_layers):
+            # print(f"layer {i}")
+            x = layer(x)
+            rx_list.append(x)
+        # [200, 176, 5]
+        out = self.conv4_out(rx_list[-1])
+        
+        return out
+
 class BiGNN(nn.Module):
     def __init__(self, model_cfg):
         super(BiGNN, self).__init__()
@@ -163,7 +219,6 @@ class DBiGNN(nn.Module):
         out = self.conv4_out(rx_list[-1])
         
         return out
-
 
 class BiGNN_Submanifold(nn.Module):
     def __init__(self, model_cfg):
@@ -374,7 +429,6 @@ class BiGNN_reproduce_v1(nn.Module):
         out = self.conv4_out(rx_list[-1])
         
         return out
-
 
 class BiGNN_Light(nn.Module):
     def __init__(self, model_cfg):

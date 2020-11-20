@@ -197,7 +197,7 @@ class KittiLiDAR(Dataset):
             points = points[np.logical_not(masks.any(-1))]
             # paste sampled points to the scene
             points = np.concatenate([sampled_points, points], axis=0)
-            
+            # transform Van into Car
             gt_types = ['Car' if n == 'Van' else n for n in gt_types]
             gt_types = np.array(gt_types)
             # select the interest classes
@@ -377,7 +377,7 @@ class KittiLiDAR(Dataset):
         else:
             data['gt_labels'] = DC(None, cpu_only=True)
             data['gt_bboxes'] = DC(None, cpu_only=True)
-            data['gt_types'] = DC(gt_types, cpu_only=True)
+            data['gt_types'] = DC(None, cpu_only=True)
 
         return data
     
