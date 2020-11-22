@@ -32,7 +32,6 @@ class SECONDNET(nn.Module):
             assert len(layer_dict['types']) == len(layer_dict['indice_keys']), f"{len(layer_dict['types'])} == {len(layer_dict['indice_keys'])}?"
             assert len(layer_dict['types']) == (len(layer_dict['filters'])-1), f"{len(layer_dict['types'])} == {len(layer_dict['filters'])-1}?"
             _sequentials = []
-
             for i in range(len(layer_dict['types'])):
                 _sequentials.append(block(
                                     layer_dict['filters'][i], 
@@ -220,7 +219,6 @@ class DBiGNN(nn.Module):
         out = self.conv4_out(rx_list[-1])
         
         return out
-
 
 class BiGNN_Submanifold(nn.Module):
     def __init__(self, model_cfg):
@@ -431,7 +429,6 @@ class BiGNN_reproduce_v1(nn.Module):
         out = self.conv4_out(rx_list[-1])
         
         return out
-
 
 class BiGNN_Light(nn.Module):
     def __init__(self, model_cfg):
