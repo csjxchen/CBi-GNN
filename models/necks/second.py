@@ -19,7 +19,7 @@ class SECOND(nn.Module):
         Args:
             model_cfg (dict): define the architecture of model
         """
-        super(DCBiNet, self).__init__()
+        super(SECOND, self).__init__()
         self.model_cfg = model_cfg
         self.sparse_shape = self.model_cfg['output_shape']
         ThrDNet_cfg = self.model_cfg.ThrDNet
