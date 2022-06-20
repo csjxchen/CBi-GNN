@@ -20,26 +20,42 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 ## Installation
 
 1. Follow the instruction in [spconv](https://github.com/traveller59/spconv)
-2. `pip install -r requirements.txt`
-3. build iou3d `cd dets/ops/iou3d && sh install.sh`
-4. build pointnet2 `cd dets/ops/pointnet2 && sh install.sh`
-5. build points_op `cd dets/ops/points_op && sh install.sh`
+2. build iou3d `cd dets/ops/iou3d && sh install.sh`
+3. build pointnet2 `cd dets/ops/pointnet2 && sh install.sh`
+4. build points_op `cd dets/ops/points_op && sh install.sh`
 
+
+## Dataset 
+  Dataset is downloaded from [KITTI](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) and orgnized as follow:
+  
+  ```
+  ├── data
+  │   ├── KITTI
+  │   │   ├── ImageSets
+  │   │   ├── object
+  │   │   │   ├──training
+  │   │   │      ├──calib & velodyne & label_2 & image_2 & (optional: planes)
+  │   │   │   ├──testing
+  │   │   │      ├──calib & velodyne & image_2
+  ├── lib
+  ├── pointnet2_lib
+  ├── tools
+  ```
 ## Usage
 
 ### Inference
 
 #### Test on validation
 
-- `cd excutes && python test.py ../configs/default.py ../experiments/checkpoint.pth --save_to_file True --gpus=1`
+- `cd excutes && python test.py ../configs/reproduce_cbi-gnn.py ../experiments/reproduce/checkpoint.pth --save_to_file True --gpus=1`
 
 #### Kitti server
 
-- `cd excutes && python test.py ../configs/default.py ../experiments/checkpoint.pth --save_to_file True --gpus=1 --test`
+- `cd excutes && python test.py ../configs/reproduce_cbi-gnn.py ../experiments/reproduce/checkpoint.pth --save_to_file True --gpus=1 --test`
 
 ### Train
 
-- `cd excutes && python train.py ../configs/default.py --gpus=1`
+- `cd excutes && python train.py ../configs/reproduce_cbi-gnn.py --gpus=1`
 
 ## Benchmark
 
