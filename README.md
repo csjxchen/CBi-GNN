@@ -43,19 +43,19 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
   ```
 ## Usage
 
-### Inference
-
+#### Model
+- Model trained has been released on [Google Drive](https://drive.google.com/file/d/13V71iLbhWDYssMmRSzmwo57Vzm8XCD5P/view?usp=sharing) and we will release more of different settings soon.
 #### Test on validation
 
-- `cd excutes && python test.py ../configs/reproduce_cbi-gnn.py ../experiments/reproduce/checkpoint.pth --save_to_file True --gpus=1`
+- `cd excutes && python test.py ../configs/cbignn.py checkpoint_epoch_50.pth --save_to_file True --gpus=1`
 
 #### Kitti server
 
-- `cd excutes && python test.py ../configs/reproduce_cbi-gnn.py ../experiments/reproduce/checkpoint.pth --save_to_file True --gpus=1 --test`
+- `cd excutes && python test.py ../configs/cbignn.py ../experiments/reproduce/cbignn/checkpoint.pth --save_to_file True --gpus=1 --test`
 
 ### Train
 
-- `cd excutes && python train.py ../configs/reproduce_cbi-gnn.py --gpus=1`
+- `cd excutes && python train.py ../configs/cbignn.py --gpus=1`
 
 ## Benchmark
 

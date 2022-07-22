@@ -13,74 +13,104 @@ model = dict(
                 num_input_features=4,
                 num_hidden_features=64 * 4,
                 ThrDNet=dict(
-                    type="BiGNN",
+                    type="DBiGNN",
                     args=dict(
                         conv_inputs=[4, 16],
-                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 32]},
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv2', 'subm2'], 'paddings': [[1], [1]],   'strides':[2, 1], 'filters': [32, 32, 32]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv3', 'subm3'], 'paddings': [[1], [1]], 'strides':[2, 1], 'filters': [32, 32, 64]}, 
-                                    {'types':['spconv', 'subm'], 'indice_keys': ['spconv4', 'subm4'], 'paddings': [[0, 1, 1], [1]], 'strides':[2, 1], 'filters': [64, 64, 32]}],
+                        downsample_layers=[{'types':['subm'], 'indice_keys': ['subm1'],  'paddings': [[1]], 'strides':[1],  'filters': [16, 16]},
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv2', 'subm2', 'subm2'], 'paddings': [[1], [1], [1]],   'strides':[2, 1, 1], 'filters': [16, 32, 32, 32]}, 
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv3', 'subm3', 'subm3'], 'paddings': [[1], [1], [1]], 'strides':[2, 1, 1], 'filters': [32, 64, 64, 64]}, 
+                                    {'types':['spconv', 'subm', 'subm'], 'indice_keys': ['spconv4', 'subm4', 'subm4'], 'paddings': [[0, 1, 1], [1], [1]], 'strides':[2, 1, 1], 'filters': [64, 64, 64, 64]}],
                         groupers=[
+                             dict(
+                                    grouper_type='GrouperDisAttention_reproduce_v2',
+                                    forward_type='pcs',
+                                    args=dict(
+                                        radius=1.0,
+                                        nsamples=128,
+                                        mlps=[4, 32, 32],
+                                        use_xyz=True,
+                                        # xyz_mlp_spec=[3, 32, 32],
+                                        xyz_mlp_spec=[3, 32],
+                                        xyz_mlp_bn=False,
+                                        feat_mlp_bn=False,
+                                        instance_norm=False
+                                        ),
+                                    maps=dict(
+                                        lr_index=4,
+                                        hr_index=0,
+                                        lr_voxel_size=(0.4, 0.4, 1.0),   
+                                        offset=(0., -40., -3.)
+                                        )),
                                 dict(
-                                    grouper_type='GrouperDisAttention',
+                                    grouper_type='GrouperDisAttention_reproduce_v2',
                                     forward_type='v1',
                                     args=dict(
                                         radius=1.0,
                                         nsamples=128,
-                                        mlps=[32, 32],
+                                        mlps=[16, 32],
                                         use_xyz=True,
-                                        bn=False,
+                                        # xyz_mlp_spec=[3, 32, 32],
+                                        xyz_mlp_spec=[3, 32],
+                                        xyz_mlp_bn=False,
+                                        feat_mlp_bn=False,
                                         instance_norm=False
                                         ),
                                     maps=dict(
-                                        lr_index=3,
-                                        hr_index=0,
+                                        lr_index=4,
+                                        hr_index=1,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.05, 0.05, 0.1),
                                         offset=(0., -40., -3.)
                                         )),
                                 dict(
-                                    grouper_type='GrouperDisAttention',
+                                    grouper_type='GrouperDisAttention_reproduce_v2',
                                     forward_type='v1',
                                     args=dict(
                                         radius=1.0,
-                                        nsamples=32,
+                                        nsamples=64,
                                         mlps=[32, 32],
                                         use_xyz=True,
-                                        bn=False,
+                                        # xyz_mlp_spec=[3, 32, 32],
+                                        xyz_mlp_spec=[3, 32],
+                                        xyz_mlp_bn=False,
+                                        feat_mlp_bn=False,
                                         instance_norm=False
                                         ),
                                     maps=dict(
-                                        lr_index=3,
-                                        hr_index=1,
+                                        lr_index=4,
+                                        hr_index=2,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.1, 0.1, 0.2),
                                         offset=(0., -40., -3.)
                                         )),
                                 dict(
-                                    grouper_type='GrouperDisAttention',
+                                    grouper_type='GrouperDisAttention_reproduce_v2',
                                     forward_type='v1',
                                     args=dict(
                                         radius=1.0,
-                                        nsamples=16,
+                                        nsamples=64,
                                         mlps=[64, 32],
                                         use_xyz=True,
-                                        bn=False,
+                                        # xyz_mlp_spec=[3, 32, 32],
+                                        xyz_mlp_spec=[3, 32],
+
+                                        xyz_mlp_bn=False,
+                                        feat_mlp_bn=False,
                                         instance_norm=False
                                         ),
                                     maps=dict(
-                                        lr_index=3,
-                                        hr_index=2,
+                                        lr_index=4,
+                                        hr_index=3,
                                         lr_voxel_size=(0.4, 0.4, 1.0),   
                                         hr_voxel_size=(0.2, 0.2, 0.4),
                                         offset=(0., -40., -3.)
-                                        )),  
+                                        )),
                                 ])
                             ),
                 TwoDNet=dict(
                     type='PCDetBEVNet',
                     args=dict(
-                        num_input_features=256,
+                        num_input_features=64 * 4,
                         num_filters=[128, 256],
                         num_output_features=256,
                         concat_input=False, 
@@ -90,7 +120,6 @@ model = dict(
                         num_upsample_filters = [256, 256],
                     )
                 )
-            
             ),
             bbox_head=dict(
                 type='SSDRotateHead',
@@ -103,7 +132,7 @@ model = dict(
                     use_direction_classifier=True,
                     box_code_size=7,
                     alignment_head_cfg=dict(
-                        type='NonlocalPart',
+                        type='PSWarpHead',
                         args=dict(
                             grid_offsets = (0., 40.),
                             featmap_stride=.4,
@@ -113,11 +142,9 @@ model = dict(
                             )
                     ),
                 ),
-            ),
-        
+            ),        
         # rfn=dict()
 )
-
 
 # model training and testing settings
 train_cfg = dict(
@@ -266,7 +293,7 @@ log_config = dict(interval=50)
 total_epochs = 50
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-exp_dir = '../experiments/reproduce/cbi-gnn'
+exp_dir = '../experiments/reproduce/cbignn'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
