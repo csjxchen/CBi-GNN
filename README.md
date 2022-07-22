@@ -2,13 +2,13 @@
 
 CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 <div align=center>
-  <img width=800 src="readme/fig2.jpg" >
+  <img width=800 src="readme/fig3.jpg" >
 </div>
 
 ## Motivation
 
 <div align=center>
-  <img width=400 src="readme/fig1.jpg" >
+  <img width=400 src="readme/fig4.jpg" >
 </div>
 
 ## Requirements
