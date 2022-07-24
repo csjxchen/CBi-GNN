@@ -31,7 +31,7 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
   ```
   ├── data
   │   ├── KITTI
-  │   │   ├── ImageSets
+  │   │   ├── ImageSets               (txt files for splited samples list (train.txt, val.txt, test.txt))
   │   │   ├── object
   │   │   │   ├──training
   │   │   │      ├──calib & velodyne & label_2 & image_2 & (optional: planes)
@@ -41,6 +41,9 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
   ├── pointnet2_lib
   ├── tools
   ```
+  This dataset include 7481 samples for training and 7518 samples for online test.
+  We also split training dataset into train and val for improving model 
+  following  [OpenPCDet](https://github.com/open-mmlab/OpenPCDet), specifically 3769 samples for val and 3712 samples for train. 
 ## Usage
 
 #### Model
@@ -82,3 +85,11 @@ CBi-GNN: Cross-Scale Bilateral Graph Neural Network for 3D object detection
 
 - [X] MMCV
 - [X] PytorchLightning
+
+## Acknowledgement
+This repo borrows code from the following repos:
+  - [OpenPCDet](https://github.com/open-mmlab/OpenPCDet)
+  - [SA-SSD](https://github.com/skyhehe123/SA-SSD)
+  - [3DSSD](https://github.com/dvlab-research/3DSSD)
+  - [SECOND](https://github.com/traveller59/second.pytorch)
+  - [spconv](https://github.com/traveller59/spconv)
